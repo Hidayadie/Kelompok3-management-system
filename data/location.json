@@ -1,0 +1,27 @@
+[
+  {
+    "locationID": 1,
+    "namaLocation": "Ruang IT",
+    "jenis": "Ruangan"
+  },
+  {
+    "locationID": 2,
+    "namaLocation": "Ruang Admin",
+    "jenis": "Ruangan"
+  },
+  {
+    "locationID": 3,
+    "namaLocation": "Gudang Aset",
+    "jenis": "Gudang"
+  },
+  {
+    "locationID": 4,
+    "namaLocation": "Ruang Meeting",
+    "jenis": "Ruangan"
+  },
+  {
+    "locationID": 5,
+    "namaLocation": "Cabang Yogyakarta",
+    "jenis": "Kantor"
+  }
+]

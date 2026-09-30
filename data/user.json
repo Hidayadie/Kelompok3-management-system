@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "name": "Andi Pratama",
+    "email": "andi@perusahaan.com",
+    "role": "admin"
+  },
+  {
+    "id": 2,
+    "name": "Budi Santoso",
+    "email": "budi@perusahaan.com",
+    "role": "teknisi"
+  },
+  {
+    "id": 3,
+    "name": "Citra Lestari",
+    "email": "citra@perusahaan.com",
+    "role": "superadmin"
+  },
+  {
+    "id": 4,
+    "name": "Dedi Kurniawan",
+    "email": "dedi@perusahaan.com",
+    "role": "admin"
+  }
+]
