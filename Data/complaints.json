@@ -1,0 +1,46 @@
+[
+  {
+    "id": 1,
+    "code": "CMP-2026-001",
+    "userID": 1,
+    "assetID": 3,
+    "title": "Printer tidak bisa mencetak1",
+    "description": "Printer menyala tetapi dokumen tidak dapat dicetak",
+    "priority": 0.85,
+    "status": "urgent",
+    "note": "Perlu pemeriksaan teknisi segera"
+  },
+  {
+    "id": 2,
+    "code": "CMP-2026-002",
+    "userID": 4,
+    "assetID": 1,
+    "title": "Laptop lambat",
+    "description": "Laptop mengalami penurunan performa ketika membuka aplikasi",
+    "priority": 0.5,
+    "status": "middle",
+    "note": "Perlu pengecekan kapasitas storage dan aplikasi berjalan"
+  },
+  {
+    "id": 3,
+    "code": "CMP-2026-003",
+    "userID": 2,
+    "assetID": 4,
+    "title": "Koneksi jaringan tidak stabil",
+    "description": "Koneksi internet beberapa kali terputus",
+    "priority": 0.55,
+    "status": "middle",
+    "note": "Teknisi melakukan pengecekan router"
+  },
+  {
+    "id": 4,
+    "code": "CMP-2026-004",
+    "userID": 1,
+    "assetID": 5,
+    "title": "Monitor berkedip",
+    "description": "Monitor mengalami kedipan ketika digunakan",
+    "priority": 0.2,
+    "status": "low",
+    "note": "Menunggu pemeriksaan teknisi"
+  }
+]

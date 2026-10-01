@@ -1,0 +1,23 @@
+[
+  {
+    "userID": 1,
+    "leadingDate": "2026-09-01T08:00:00+07:00",
+    "qtyLeading": 1,
+    "leadingStatus": "Dipinjam",
+    "leadingReturn": "2026-10-01T17:00:00+07:00"
+  },
+  {
+    "userID": 2,
+    "leadingDate": "2026-09-05T08:30:00+07:00",
+    "qtyLeading": 2,
+    "leadingStatus": "Dipinjam",
+    "leadingReturn": "2026-10-05T17:00:00+07:00"
+  },
+  {
+    "userID": 4,
+    "leadingDate": "2026-09-10T09:00:00+07:00",
+    "qtyLeading": 1,
+    "leadingStatus": "Dikembalikan",
+    "leadingReturn": "2026-09-20T16:00:00+07:00"
+  }
+]

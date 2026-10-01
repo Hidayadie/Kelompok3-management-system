@@ -1,0 +1,18 @@
+[
+  {
+    "categoryID": 1,
+    "nameCategory": "Perangkat Komputer"
+  },
+  {
+    "categoryID": 2,
+    "nameCategory": "Perangkat Jaringan"
+  },
+  {
+    "categoryID": 3,
+    "nameCategory": "Perangkat Printer"
+  },
+  {
+    "categoryID": 4,
+    "nameCategory": "Peralatan Kantor"
+  }
+]

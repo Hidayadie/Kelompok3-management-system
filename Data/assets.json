@@ -1,0 +1,127 @@
+[
+  {
+    "asetID": 1,
+    "codeAset": "AST-LAP-001",
+    "nameAsset": "Laptop Lenovo ThinkPad E14",
+    "categorys": [
+      {
+        "categoryID": 1,
+        "nameCategory": "Perangkat Komputer"
+      }
+    ],
+    "locations": [
+      {
+        "locationID": 1,
+        "namaLocation": "Ruang IT",
+        "jenis": "Ruangan"
+      }
+    ],
+    "condition": "Baik",
+    "status": true,
+    "description": "Laptop untuk kebutuhan operasional tim IT",
+    "qtyIn": 10,
+    "qtyOut": 3,
+    "qtyReal": 7,
+    "updateAt": "2026-09-30T08:30:00+07:00"
+  },
+  {
+    "asetID": 2,
+    "codeAset": "AST-PC-001",
+    "nameAsset": "PC Desktop Dell OptiPlex",
+    "categorys": [
+      {
+        "categoryID": 1,
+        "nameCategory": "Perangkat Komputer"
+      }
+    ],
+    "locations": [
+      {
+        "locationID": 2,
+        "namaLocation": "Ruang Admin",
+        "jenis": "Ruangan"
+      }
+    ],
+    "condition": "Baik",
+    "status": true,
+    "description": "Komputer untuk administrasi perusahaan",
+    "qtyIn": 15,
+    "qtyOut": 5,
+    "qtyReal": 10,
+    "updateAt": "2026-09-29T14:20:00+07:00"
+  },
+  {
+    "asetID": 3,
+    "codeAset": "AST-PRT-001",
+    "nameAsset": "Printer Epson L3210",
+    "categorys": [
+      {
+        "categoryID": 3,
+        "nameCategory": "Perangkat Printer"
+      }
+    ],
+    "locations": [
+      {
+        "locationID": 2,
+        "namaLocation": "Ruang Admin",
+        "jenis": "Ruangan"
+      }
+    ],
+    "condition": "Rusak",
+    "status": false,
+    "description": "Printer mengalami masalah pada sistem pencetakan",
+    "qtyIn": 5,
+    "qtyOut": 2,
+    "qtyReal": 3,
+    "updateAt": "2026-09-28T10:15:00+07:00"
+  },
+  {
+    "asetID": 4,
+    "codeAset": "AST-NET-001",
+    "nameAsset": "Router Mikrotik RB750",
+    "categorys": [
+      {
+        "categoryID": 2,
+        "nameCategory": "Perangkat Jaringan"
+      }
+    ],
+    "locations": [
+      {
+        "locationID": 1,
+        "namaLocation": "Ruang IT",
+        "jenis": "Ruangan"
+      }
+    ],
+    "condition": "Baik",
+    "status": true,
+    "description": "Router utama jaringan kantor",
+    "qtyIn": 4,
+    "qtyOut": 1,
+    "qtyReal": 3,
+    "updateAt": "2026-09-27T09:00:00+07:00"
+  },
+  {
+    "asetID": 5,
+    "codeAset": "AST-MON-001",
+    "nameAsset": "Monitor LG 24 Inch",
+    "categorys": [
+      {
+        "categoryID": 1,
+        "nameCategory": "Perangkat Komputer"
+      }
+    ],
+    "locations": [
+      {
+        "locationID": 3,
+        "namaLocation": "Gudang Aset",
+        "jenis": "Gudang"
+      }
+    ],
+    "condition": "Baik",
+    "status": true,
+    "description": "Monitor cadangan untuk kebutuhan operasional",
+    "qtyIn": 20,
+    "qtyOut": 8,
+    "qtyReal": 12,
+    "updateAt": "2026-09-26T16:45:00+07:00"
+  }
+]
