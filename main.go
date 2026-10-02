@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -244,7 +243,15 @@ func newMux(store *Store) http.Handler {
 	})
 
 	mux.HandleFunc("GET /complaints", func(w http.ResponseWriter, r *http.Request) {
-		writeHTML(w, http.StatusOK, pageData{Title: "Daftar Pengaduan", Mode: "index", Complaints: store.All()})
+		writeHTML(w, http.StatusOK, pageData{Title: "Daftar Pengaduan", Mode: "showComplaint", Complaints: store.All()})
+	})
+
+	mux.HandleFunc("GET /assets", func(w http.ResponseWriter, r *http.Request) {
+		writeHTML(w, http.StatusOK, pageData{Title: "Daftar Aset", Mode: "showAsset", Assets: store.All()})
+	})
+
+	mux.HandleFunc("GET /Categories", func(w http.ResponseWriter, r *http.Request) {
+		writeHTML(w, http.StatusOK, pageData{Title: "Daftar Category", Mode: "showCategory", Category: store.All()})
 	})
 
 	// ---------- CREATE ----------
@@ -558,163 +565,25 @@ type pageData struct {
 }
 
 func writeHTML(w http.ResponseWriter, status int, data pageData) {
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(status)
-	if err := pageTemplate.Execute(w, data); err != nil {
-		log.Println("write response:", err)
+
+	// Header
+	if err := headerTemplate.Execute(w, data); err != nil {
+		log.Println("write header:", err)
+		return
+	}
+
+	// Body
+	if err := bodyTemplate.Execute(w, data); err != nil {
+		log.Println("write body:", err)
+		return
+	}
+
+	// Footer
+	if err := footerTemplate.Execute(w, data); err != nil {
+		log.Println("write footer:", err)
+		return
 	}
 }
-
-var pageTemplate = template.Must(template.New("page").Parse(`<!doctype html>
-<html lang="id">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{.Title}}</title>
-  <style>
-    body { font-family: system-ui, sans-serif; margin: 2rem; color: #222; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 8px 10px; text-align: left; vertical-align: top; }
-    thead th { background: #f0f0f0; }
-    tbody tr:nth-child(even) { background: #fafafa; }
-    tbody tr:hover { background: #eef5ff; }
-    section { overflow-x: auto; }
-    .btn { display: inline-block; padding: 8px 14px; background: #2563eb; color: #fff;
-           border: 0; border-radius: 6px; text-decoration: none; cursor: pointer; font-size: 1rem; }
-    .btn:hover { background: #1d4ed8; }
-    .btn-sm { padding: 4px 10px; font-size: 0.9rem; }
-    .btn-danger { background: #dc2626; }
-    .btn-danger:hover { background: #b91c1c; }
-    .btn-warn { background: #d97706; }
-    .btn-warn:hover { background: #b45309; }
-    form.inline { display: inline; max-width: none; }
-    .row-actions { white-space: nowrap; }
-    form { max-width: 560px; }
-    label { display: block; margin-top: 1rem; font-weight: 600; }
-    input, select, textarea { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box;
-                              border: 1px solid #bbb; border-radius: 6px; font: inherit; }
-    .error { background: #fee2e2; color: #991b1b; padding: 10px 12px; border-radius: 6px; }
-    .actions { margin-top: 1.5rem; }
-  </style>
-</head>
-<body>
-  <main>
-    <header>
-      <h1>{{.Title}}</h1>
-      {{if eq .Mode "index"}}
-        <p><a class="btn" href="/complaints/new">+ Tambah Pengaduan</a></p>
-      {{else}}
-        <p><a href="/complaints">Kembali ke daftar pengaduan</a></p>
-      {{end}}
-    </header>
-
-    {{if eq .Mode "index"}}
-      <section>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Kode</th>
-              <th>User ID</th>
-              <th>Asset ID</th>
-              <th>Judul</th>
-              <th>Deskripsi</th>
-              <th>Prioritas</th>
-              <th>Status</th>
-              <th>Catatan</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {{range .Complaints}}
-            <tr>
-              <td>{{.ID}}</td>
-              <td>{{.Code}}</td>
-              <td>{{.UserID}}</td>
-              <td>{{.AssetID}}</td>
-              <td><a href="/complaints/{{.ID}}">{{.Title}}</a></td>
-              <td>{{.Description}}</td>
-              <td>{{.Priority}}</td>
-              <td>{{.Status}}</td>
-              <td>{{.Note}}</td>
-              <td class="row-actions">
-                <a class="btn btn-sm btn-warn" href="/complaints/{{.ID}}/edit">Edit</a>
-                <form class="inline" method="post" action="/complaints/{{.ID}}/delete" onsubmit="return confirm('Hapus pengaduan ini?')">
-                  <button class="btn btn-sm btn-danger" type="submit">Hapus</button>
-                </form>
-              </td>
-            </tr>
-            {{else}}
-            <tr><td colspan="10">Belum ada pengaduan.</td></tr>
-            {{end}}
-          </tbody>
-        </table>
-      </section>
-
-    {{else if eq .Mode "form"}}
-      {{if .Error}}<p class="error">{{.Error}}</p>{{end}}
-      <form method="post" action="{{.Action}}">
-        <label for="userID">User</label>
-        <select id="userID" name="userID" required>
-          <option value="">-- Pilih user --</option>
-          {{range .Users}}
-          <option value="{{.ID}}" {{if eq (printf "%d" .ID) $.Form.UserID}}selected{{end}}>{{.ID}} - {{.Name}}</option>
-          {{end}}
-        </select>
-
-        <label for="assetID">Asset</label>
-        <select id="assetID" name="assetID" required>
-          <option value="">-- Pilih asset --</option>
-          {{range .Assets}}
-          <option value="{{.AsetID}}" {{if eq (printf "%d" .AsetID) $.Form.AssetID}}selected{{end}}>{{.CodeAset}} - {{.NameAsset}}</option>
-          {{end}}
-        </select>
-
-        <label for="title">Judul</label>
-        <input id="title" name="title" type="text" required value="{{.Form.Title}}">
-
-        <label for="description">Deskripsi</label>
-        <textarea id="description" name="description" rows="4" required>{{.Form.Description}}</textarea>
-
-        <label for="priority">Prioritas</label>
-        <input id="priority" name="priority" type="number" min="0" step="any" required value="{{.Form.Priority}}">
-
-        <label for="status">Status</label>
-        <select id="status" name="status">
-          <option value="urgent" {{if eq .Form.Status "urgent"}}selected{{end}}>Urgent</option>
-          <option value="midle" {{if eq .Form.Status "midle"}}selected{{end}}>Midle</option>
-          <option value="low" {{if eq .Form.Status "low"}}selected{{end}}>Low</option>
-        </select>
-
-        <label for="note">Catatan (opsional)</label>
-        <textarea id="note" name="note" rows="2">{{.Form.Note}}</textarea>
-
-        <div class="actions">
-          <button class="btn" type="submit">{{if .IsEdit}}Simpan Perubahan{{else}}Simpan{{end}}</button>
-        </div>
-      </form>
-
-    {{else}}
-      <article>
-        <p>{{.Complaint.Description}}</p>
-        <table>
-          <tr><th>ID</th><td>{{.Complaint.ID}}</td></tr>
-          <tr><th>Kode</th><td>{{.Complaint.Code}}</td></tr>
-          <tr><th>User ID</th><td>{{.Complaint.UserID}}</td></tr>
-          <tr><th>Asset ID</th><td>{{.Complaint.AssetID}}</td></tr>
-          <tr><th>Prioritas</th><td>{{.Complaint.Priority}}</td></tr>
-          <tr><th>Status</th><td>{{.Complaint.Status}}</td></tr>
-          <tr><th>Catatan</th><td>{{.Complaint.Note}}</td></tr>
-        </table>
-        <div class="actions">
-          <a class="btn btn-warn" href="/complaints/{{.Complaint.ID}}/edit">Edit</a>
-          <form class="inline" method="post" action="/complaints/{{.Complaint.ID}}/delete" onsubmit="return confirm('Hapus pengaduan ini?')">
-            <button class="btn btn-danger" type="submit">Hapus</button>
-          </form>
-        </div>
-      </article>
-    {{end}}
-  </main>
-</body>
-</html>
-`))
