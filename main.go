@@ -256,6 +256,7 @@ func newMux(store *Store) http.Handler {
 
 	mux.HandleFunc("GET /assets", func(w http.ResponseWriter, r *http.Request) {
 		writeHTML(w, http.StatusOK, pageData{Title: "Daftar Asset", Mode: "showAsset", Assets: store.AllAssets()})
+		fmt.Println("Jumlah aset: ", len(store.assets))
 	})
 	/*
 		mux.HandleFunc("GET /Categories", func(w http.ResponseWriter, r *http.Request) {

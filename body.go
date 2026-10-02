@@ -38,7 +38,7 @@ var bodyTemplate = template.Must(template.New("body").Parse(`
 
 	<thead>
 		<tr>
-			<th>ID</th>
+			<th>AsetID</th>
 			<th>Kode</th>
 			<th>User ID</th>
 			<th>Asset ID</th>
@@ -293,14 +293,14 @@ var bodyTemplate = template.Must(template.New("body").Parse(`
 
 			<a
 				class="btn btn-sm btn-warn"
-				href="/assets/{{.ID}}/edit">
+				href="/assets/{{.AsetID}}/edit">
 				Edit
 			</a>
 
 			<form
 				class="inline"
 				method="post"
-				action="/assets/{{.ID}}/delete">
+				action="/assets/{{.AsetID}}/delete">
 
 				<button
 					class="btn btn-sm btn-danger"
