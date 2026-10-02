@@ -132,6 +132,14 @@ func (s *Store) All() []Complaints {
 	return out
 }
 
+func (s *Store) AllAssets() []Assets {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	out := make([]Assets, len(s.assets))
+	copy(out, s.assets)
+	return out
+}
+
 func (s *Store) Find(id int) (Complaints, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -247,12 +255,12 @@ func newMux(store *Store) http.Handler {
 	})
 
 	mux.HandleFunc("GET /assets", func(w http.ResponseWriter, r *http.Request) {
-		writeHTML(w, http.StatusOK, pageData{Title: "Daftar Aset", Mode: "showAsset", Assets: store.All()})
+		writeHTML(w, http.StatusOK, pageData{Title: "Daftar Asset", Mode: "showAsset", Assets: store.AllAssets()})
 	})
-
-	mux.HandleFunc("GET /Categories", func(w http.ResponseWriter, r *http.Request) {
-		writeHTML(w, http.StatusOK, pageData{Title: "Daftar Category", Mode: "showCategory", Category: store.All()})
-	})
+	/*
+		mux.HandleFunc("GET /Categories", func(w http.ResponseWriter, r *http.Request) {
+			writeHTML(w, http.StatusOK, pageData{Title: "Daftar Category", Mode: "showCategory", Category: store.All()})
+		})*/
 
 	// ---------- CREATE ----------
 
@@ -560,6 +568,7 @@ type pageData struct {
 	Complaint  Complaints
 	Users      []User
 	Assets     []Assets
+	Asset      Assets
 	Form       formData
 	Error      string
 }
@@ -576,6 +585,7 @@ func writeHTML(w http.ResponseWriter, status int, data pageData) {
 	}
 
 	// Body
+
 	if err := bodyTemplate.Execute(w, data); err != nil {
 		log.Println("write body:", err)
 		return

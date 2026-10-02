@@ -250,6 +250,84 @@ var bodyTemplate = template.Must(template.New("body").Parse(`
 
 </form>
 
+{{else if eq .Mode "showAsset"}}
+
+
+	<section>
+
+<table>
+
+	<thead>
+		<tr>
+			<th>ID</th>
+			<th>Kode Asset</th>
+			<th>Nama Asset</th>
+			<th>Kategori</th>
+			<th>Lokasi</th>
+			<th>Kondisi</th>
+			<th>Status</th>
+			<th>Description</th>
+			<th>Quantity In</th>
+			<th>Queantity Out</th>
+			<th>Quantity Awal</th>
+			<th>Action</th>
+		</tr>
+	</thead>
+
+	<tbody>
+
+	{{range .Assets}}
+	<tr>
+		<td>{{.AsetID}}</td>
+		<td>{{.CodeAset}}</td>
+		<td>{{.NameAsset}}</td>
+		<td>{{.Categorys}}</td>
+		<td>{{.Locations}}</td>
+		<td>{{.Condition}}</td>
+		<td>{{.Status}}</td>
+		<td>{{.Description}}</td>
+		<td>{{.QtyIn}}</td>
+		<td>{{.QtyOut}}</td>
+		<td>{{.QtyReal}}</td>
+		<td class="row-actions">
+
+			<a
+				class="btn btn-sm btn-warn"
+				href="/assets/{{.ID}}/edit">
+				Edit
+			</a>
+
+			<form
+				class="inline"
+				method="post"
+				action="/assets/{{.ID}}/delete">
+
+				<button
+					class="btn btn-sm btn-danger"
+					type="submit">
+					Hapus
+				</button>
+
+			</form>
+
+		</td>
+	</tr>
+
+	{{else}}
+
+	<tr>
+		<td colspan="10">
+			Belum ada pengaduan.
+		</td>
+	</tr>
+
+	{{end}}
+
+	</tbody>
+
+</table>
+
+</section>
 
 {{else if eq .Mode "detailComplaint"}}
 
@@ -322,6 +400,7 @@ var bodyTemplate = template.Must(template.New("body").Parse(`
 </article>
 
 {{end}}
+
 
 </main>
 
