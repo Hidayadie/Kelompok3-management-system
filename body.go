@@ -27,6 +27,25 @@ var bodyTemplate = template.Must(template.New("body").Parse(`
 	</p>
 
 	{{end}}
+
+{{if eq .Mode "showAsset"}}
+	<h1>{{.Title}}</h1>
+
+	<p>
+		<a class="btn" href="/assets/new">
+			+ Tambah Asset
+		</a>
+	</p>
+
+	{{else if eq .Mode "detailAsset"}}
+
+	<p>
+		<a href="/assets">
+			Kembali ke daftar Asset
+		</a>
+	</p>
+
+	{{end}}
 </header>
 
 
@@ -118,7 +137,7 @@ var bodyTemplate = template.Must(template.New("body").Parse(`
 {{if .Error}}
 	<p class="error">{{.Error}}</p>
 {{end}}
-
+<h2>Tambah Komplain</h2>
 <form method="post" action="{{.Action}}">
 
 	<label for="userID">User</label>
@@ -250,6 +269,176 @@ var bodyTemplate = template.Must(template.New("body").Parse(`
 
 </form>
 
+{{else if eq .Mode "formAsset"}}
+
+{{if .Error}}
+	<p class="error">{{.Error}}</p>
+{{end}}
+
+<form method="post" action="{{.Action}}">
+
+	 <h2>Tambah Aset</h2>
+
+    <!-- Kode Aset -->
+    <label for="codeAset">
+        Kode Aset
+    </label>
+
+    <input
+        type="text"
+        id="codeAset"
+        name="codeAset"
+        placeholder="Contoh: AST-LAP-001"
+        required
+    >
+
+
+    <!-- Nama Aset -->
+    <label for="nameAsset">
+        Nama Aset
+    </label>
+
+    <input
+        type="text"
+        id="nameAsset"
+        name="nameAsset"
+        placeholder="Contoh: Laptop Lenovo ThinkPad E14"
+        required
+    >
+
+
+    <!-- Kategori -->
+    <label for="categoryID">
+        Kategori
+    </label>
+
+    <select
+        id="categoryID"
+        name="categoryID"
+        required
+    >
+        <option value="">-- Pilih Kategori --</option>
+
+        <option value="1">
+            Perangkat Komputer
+        </option>
+
+        <option value="2">
+            Perangkat Jaringan
+        </option>
+
+        <option value="3">
+            Perangkat Elektronik
+        </option>
+    </select>
+
+
+    <!-- Lokasi -->
+    <label for="locationID">
+        Lokasi
+    </label>
+
+    <select
+        id="locationID"
+        name="locationID"
+        required
+    >
+        <option value="">-- Pilih Lokasi --</option>
+
+        <option value="1">
+            Ruang IT
+        </option>
+
+        <option value="2">
+            Ruang Administrasi
+        </option>
+
+        <option value="3">
+            Ruang Dosen
+        </option>
+    </select>
+
+
+    <!-- Kondisi -->
+    <label for="condition">
+        Kondisi
+    </label>
+
+    <select
+        id="condition"
+        name="condition"
+        required
+    >
+        <option value="">-- Pilih Kondisi --</option>
+        <option value="Baik">Baik</option>
+        <option value="Rusak Ringan">Rusak Ringan</option>
+        <option value="Rusak Berat">Rusak Berat</option>
+    </select>
+
+
+    <!-- Status -->
+    <label for="status">
+        Status
+    </label>
+
+    <select
+        id="status"
+        name="status"
+        required
+    >
+        <option value="true">Aktif</option>
+        <option value="false">Tidak Aktif</option>
+    </select>
+
+
+    <!-- Jumlah Masuk -->
+    <label for="qtyIn">
+        Jumlah Masuk
+    </label>
+
+    <input
+        type="number"
+        id="qtyIn"
+        name="qtyIn"
+        min="0"
+        value="0"
+        required
+    >
+
+    <!-- Deskripsi -->
+    <label for="description">
+        Deskripsi
+    </label>
+
+    <textarea
+        id="description"
+        name="description"
+        rows="4"
+        placeholder="Masukkan deskripsi aset..."
+    ></textarea>
+
+
+    <!-- Tombol -->
+    <div class="actions">
+
+        <button
+            type="submit"
+            class="btn"
+        >
+            Simpan Aset
+        </button>
+
+        <a
+            href="/assets"
+            class="btn btn-secondary"
+        >
+            Batal
+        </a>
+
+    </div>
+
+
+</form>
 {{else if eq .Mode "showAsset"}}
 
 

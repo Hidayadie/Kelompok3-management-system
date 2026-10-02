@@ -277,6 +277,18 @@ func newMux(store *Store) http.Handler {
 		})
 	})
 
+	// Rute literal "/new" lebih spesifik dari "/{id}", jadi tidak bentrok.
+	mux.HandleFunc("GET /assets/new", func(w http.ResponseWriter, r *http.Request) {
+		writeHTML(w, http.StatusOK, pageData{
+			Title:  "Tambah Assets",
+			Mode:   "formAsset",
+			Action: "/assets",
+			Users:  store.Users(),
+			Assets: store.Assets(),
+			Form:   formData{Priority: "1", Status: "urgent"},
+		})
+	})
+
 	mux.HandleFunc("POST /complaints", func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "form tidak valid", http.StatusBadRequest)
@@ -562,7 +574,7 @@ func saveComplaints(path string, complaints []Complaints) error {
 
 type pageData struct {
 	Title      string
-	Mode       string // "index", "detail", atau "form"
+	Mode       string // "index", "detail", atau "form", "formAssets"
 	IsEdit     bool   // true jika form dipakai untuk edit
 	Action     string // URL tujuan submit form
 	Complaints []Complaints
