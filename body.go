@@ -21,11 +21,8 @@ var bodyTemplate = template.Must(template.New("body").Parse(`
 	{{else if eq .Mode "detailComplaint"}}
 
 	<p>
-		<a href="/complaints">
-			Kembali ke daftar pengaduan
-		</a>
+		<a href="/complaints" class="btn">Kembali ke daftar pengaduan</a>
 	</p>
-
 	{{end}}
 
 {{if eq .Mode "showAsset"}}
