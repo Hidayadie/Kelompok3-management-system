@@ -541,6 +541,18 @@ var headerTemplate = template.Must(template.New("header").Parse(`
                 font-size: 16px;
             }
         }
+		.btn {
+  display: inline-block;
+  padding: 10px 18px;
+  background: #2563eb;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 14px;
+}
+.btn:hover {
+  background: #1d4ed8;
+}
 </style>
 <body>
 

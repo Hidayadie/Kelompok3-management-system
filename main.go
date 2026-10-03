@@ -17,6 +17,8 @@ const addr = ":2100"
 
 var errNotFound = errors.New("complaint not found")
 
+// ======================= MODEL =======================
+
 type Complaints struct {
 	ID          int     `json:"id"`
 	Code        string  `json:"code"`
@@ -59,6 +61,20 @@ type Assets struct {
 	QtyReal     int        `json:"qtyReal"`
 	UpdateAt    time.Time  `json:"updateAt"`
 }
+
+// complaintJSON adalah bentuk body JSON untuk POST dan PUT.
+// id dan code dibuat otomatis oleh server, jadi tidak perlu dikirim.
+type complaintJSON struct {
+	UserID      int     `json:"userID"`
+	AssetID     int     `json:"assetID"`
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	Priority    float64 `json:"priority"`
+	Status      string  `json:"status"`
+	Note        string  `json:"note"`
+}
+
+// ======================= STORE =======================
 
 // Store menyimpan data di memori dan menyinkronkannya ke file JSON.
 type Store struct {
@@ -111,7 +127,7 @@ func (s *Store) HasUser(id int) bool {
 	return false
 }
 
-// validate memvalidasi input form, termasuk memastikan user dan asset ada di data JSON.
+// validate memvalidasi input, termasuk memastikan user dan asset ada di data JSON.
 func (s *Store) validate(f formData) (Complaints, string) {
 	c, msg := f.toComplaint()
 	if msg == "" && !s.HasUser(c.UserID) {
@@ -219,6 +235,8 @@ func (s *Store) Delete(id int) error {
 	return errNotFound
 }
 
+// ======================= MAIN =======================
+
 func main() {
 	store, err := NewStore("data/complaints.json", "data/users.json", "data/assets.json")
 	if err != nil {
@@ -229,206 +247,56 @@ func main() {
 	log.Fatal(http.ListenAndServe(addr, newMux(store)))
 }
 
+// ======================= HELPER HTTP =======================
+
 // parseID membaca {id} dari URL. Jika tidak valid, langsung membalas 400.
 func parseID(w http.ResponseWriter, r *http.Request) (int, bool) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "id harus berupa angka", http.StatusBadRequest)
+		fail(w, r, http.StatusBadRequest, "id harus berupa angka")
 		return 0, false
 	}
 	return id, true
 }
 
-func newMux(store *Store) http.Handler {
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/" {
-			http.NotFound(w, r)
-			return
-		}
-		writeHTML(w, http.StatusOK, pageData{Title: "Sistem Pengaduan", Mode: "index", Complaints: store.All()})
-	})
-
-	mux.HandleFunc("GET /complaints", func(w http.ResponseWriter, r *http.Request) {
-		writeHTML(w, http.StatusOK, pageData{Title: "Daftar Pengaduan", Mode: "showComplaint", Complaints: store.All()})
-	})
-
-	mux.HandleFunc("GET /assets", func(w http.ResponseWriter, r *http.Request) {
-		writeHTML(w, http.StatusOK, pageData{Title: "Daftar Asset", Mode: "showAsset", Assets: store.AllAssets()})
-	})
-	/*
-		mux.HandleFunc("GET /Categories", func(w http.ResponseWriter, r *http.Request) {
-			writeHTML(w, http.StatusOK, pageData{Title: "Daftar Category", Mode: "showCategory", Category: store.All()})
-		})*/
-
-	// ---------- CREATE ----------
-
-	// Rute literal "/new" lebih spesifik dari "/{id}", jadi tidak bentrok.
-	mux.HandleFunc("GET /complaints/new", func(w http.ResponseWriter, r *http.Request) {
-		writeHTML(w, http.StatusOK, pageData{
-			Title:  "Tambah Pengaduan",
-			Mode:   "form",
-			Action: "/complaints",
-			Users:  store.Users(),
-			Assets: store.Assets(),
-			Form:   formData{Priority: "1", Status: "urgent"},
-		})
-	})
-
-	// Rute literal "/new" lebih spesifik dari "/{id}", jadi tidak bentrok.
-	mux.HandleFunc("GET /assets/new", func(w http.ResponseWriter, r *http.Request) {
-		writeHTML(w, http.StatusOK, pageData{
-			Title:  "Tambah Assets",
-			Mode:   "formAsset",
-			Action: "/assets",
-			Users:  store.Users(),
-			Assets: store.Assets(),
-			Form:   formData{Priority: "1", Status: "urgent"},
-		})
-	})
-
-	mux.HandleFunc("POST /complaints", func(w http.ResponseWriter, r *http.Request) {
-		if err := r.ParseForm(); err != nil {
-			http.Error(w, "form tidak valid", http.StatusBadRequest)
-			return
-		}
-
-		form := readForm(r)
-		complaint, msg := store.validate(form)
-		if msg != "" {
-			writeHTML(w, http.StatusBadRequest, pageData{
-				Title:  "Tambah Pengaduan",
-				Mode:   "form",
-				Action: "/complaints",
-				Users:  store.Users(),
-				Assets: store.Assets(),
-				Form:   form,
-				Error:  msg,
-			})
-			return
-		}
-
-		if _, err := store.Add(complaint); err != nil {
-			log.Println("save complaint:", err)
-			http.Error(w, "gagal menyimpan data", http.StatusInternalServerError)
-			return
-		}
-
-		http.Redirect(w, r, "/complaints", http.StatusSeeOther)
-	})
-
-	// ---------- READ (detail) ----------
-
-	mux.HandleFunc("GET /complaints/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id, ok := parseID(w, r)
-		if !ok {
-			return
-		}
-
-		complaint, found := store.Find(id)
-		if !found {
-			http.NotFound(w, r)
-			return
-		}
-
-		writeHTML(w, http.StatusOK, pageData{Title: complaint.Title, Mode: "detail", Complaint: complaint})
-	})
-
-	// ---------- UPDATE ----------
-
-	// Menampilkan form yang sudah terisi data lama.
-	mux.HandleFunc("GET /complaints/{id}/edit", func(w http.ResponseWriter, r *http.Request) {
-		id, ok := parseID(w, r)
-		if !ok {
-			return
-		}
-
-		complaint, found := store.Find(id)
-		if !found {
-			http.NotFound(w, r)
-			return
-		}
-
-		writeHTML(w, http.StatusOK, pageData{
-			Title:  "Edit Pengaduan",
-			Mode:   "form",
-			IsEdit: true,
-			Action: fmt.Sprintf("/complaints/%d", id),
-			Users:  store.Users(),
-			Assets: store.Assets(),
-			Form:   formFromComplaint(complaint),
-		})
-	})
-
-	// Form HTML hanya mendukung GET dan POST, jadi update memakai POST /complaints/{id}.
-	mux.HandleFunc("POST /complaints/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id, ok := parseID(w, r)
-		if !ok {
-			return
-		}
-		if err := r.ParseForm(); err != nil {
-			http.Error(w, "form tidak valid", http.StatusBadRequest)
-			return
-		}
-
-		form := readForm(r)
-		complaint, msg := store.validate(form)
-		if msg != "" {
-			writeHTML(w, http.StatusBadRequest, pageData{
-				Title:  "Edit Pengaduan",
-				Mode:   "form",
-				IsEdit: true,
-				Action: fmt.Sprintf("/complaints/%d", id),
-				Users:  store.Users(),
-				Assets: store.Assets(),
-				Form:   form,
-				Error:  msg,
-			})
-			return
-		}
-
-		if _, err := store.Update(id, complaint); err != nil {
-			if errors.Is(err, errNotFound) {
-				http.NotFound(w, r)
-				return
-			}
-			log.Println("update complaint:", err)
-			http.Error(w, "gagal menyimpan data", http.StatusInternalServerError)
-			return
-		}
-
-		http.Redirect(w, r, fmt.Sprintf("/complaints/%d", id), http.StatusSeeOther)
-	})
-
-	// ---------- DELETE ----------
-
-	mux.HandleFunc("POST /complaints/{id}/delete", func(w http.ResponseWriter, r *http.Request) {
-		id, ok := parseID(w, r)
-		if !ok {
-			return
-		}
-
-		if err := store.Delete(id); err != nil {
-			if errors.Is(err, errNotFound) {
-				http.NotFound(w, r)
-				return
-			}
-			log.Println("delete complaint:", err)
-			http.Error(w, "gagal menghapus data", http.StatusInternalServerError)
-			return
-		}
-
-		http.Redirect(w, r, "/complaints", http.StatusSeeOther)
-	})
-
-	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("ok\n"))
-	})
-
-	return mux
+// isJSON: true jika body request dikirim sebagai JSON (Postman, fetch, dll).
+func isJSON(r *http.Request) bool {
+	return strings.HasPrefix(r.Header.Get("Content-Type"), "application/json")
 }
+
+// wantsJSON: true jika klien meminta balasan JSON (header Accept atau ?format=json).
+func wantsJSON(r *http.Request) bool {
+	return strings.Contains(r.Header.Get("Accept"), "application/json") ||
+		r.URL.Query().Get("format") == "json"
+}
+
+func writeJSON(w http.ResponseWriter, status int, data any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		log.Println("write json:", err)
+	}
+}
+
+// fail membalas error dalam JSON untuk klien API, atau teks biasa untuk browser.
+func fail(w http.ResponseWriter, r *http.Request, status int, msg string) {
+	if isJSON(r) || wantsJSON(r) {
+		writeJSON(w, status, map[string]string{"error": msg})
+		return
+	}
+	http.Error(w, msg, status)
+}
+
+// notFound membalas 404 dalam format yang sesuai.
+func notFound(w http.ResponseWriter, r *http.Request) {
+	if isJSON(r) || wantsJSON(r) {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "complaint tidak ditemukan"})
+		return
+	}
+	http.NotFound(w, r)
+}
+
+// ======================= FORM / INPUT =======================
 
 // formData menyimpan input mentah (string) agar bisa ditampilkan ulang saat validasi gagal.
 type formData struct {
@@ -446,6 +314,30 @@ func readForm(r *http.Request) formData {
 		Status:      r.PostFormValue("status"),
 		Note:        strings.TrimSpace(r.PostFormValue("note")),
 	}
+}
+
+// readInput membaca body berupa JSON atau form, lalu menyeragamkannya ke formData.
+func readInput(w http.ResponseWriter, r *http.Request) (formData, error) {
+	if isJSON(r) {
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // maksimal 1 MB
+		var in complaintJSON
+		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+			return formData{}, err
+		}
+		return formData{
+			UserID:      strconv.Itoa(in.UserID),
+			AssetID:     strconv.Itoa(in.AssetID),
+			Title:       strings.TrimSpace(in.Title),
+			Description: strings.TrimSpace(in.Description),
+			Priority:    strconv.FormatFloat(in.Priority, 'f', -1, 64),
+			Status:      in.Status,
+			Note:        strings.TrimSpace(in.Note),
+		}, nil
+	}
+	if err := r.ParseForm(); err != nil {
+		return formData{}, err
+	}
+	return readForm(r), nil
 }
 
 // formFromComplaint mengubah data tersimpan menjadi isian form (untuk halaman edit).
@@ -483,9 +375,10 @@ func (f formData) toComplaint() (Complaints, string) {
 		return c, "Prioritas harus berupa angka (0 atau lebih)."
 	}
 	switch f.Status {
-	case "urgent", "midle", "low":
+	case "urgent", "high", "middle", "midle", "low":
+		// "midle" tetap diterima agar kompatibel dengan data/template lama.
 	default:
-		return c, "Status tidak valid."
+		return c, "Status tidak valid. Gunakan: urgent, high, middle, atau low."
 	}
 
 	return Complaints{
@@ -498,6 +391,254 @@ func (f formData) toComplaint() (Complaints, string) {
 		Note:        f.Note,
 	}, ""
 }
+
+// ======================= HANDLER CRUD =======================
+
+func createComplaint(store *Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		form, err := readInput(w, r)
+		if err != nil {
+			fail(w, r, http.StatusBadRequest, "body tidak valid: "+err.Error())
+			return
+		}
+
+		complaint, msg := store.validate(form)
+		if msg != "" {
+			if isJSON(r) {
+				writeJSON(w, http.StatusBadRequest, map[string]string{"error": msg})
+				return
+			}
+			writeHTML(w, http.StatusBadRequest, pageData{
+				Title:  "Tambah Pengaduan",
+				Mode:   "form",
+				Action: "/complaints",
+				Users:  store.Users(),
+				Assets: store.Assets(),
+				Form:   form,
+				Error:  msg,
+			})
+			return
+		}
+
+		created, err := store.Add(complaint)
+		if err != nil {
+			log.Println("save complaint:", err)
+			fail(w, r, http.StatusInternalServerError, "gagal menyimpan data")
+			return
+		}
+
+		if isJSON(r) {
+			writeJSON(w, http.StatusCreated, created)
+			return
+		}
+		http.Redirect(w, r, "/complaints", http.StatusSeeOther)
+	}
+}
+
+func updateComplaint(store *Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, ok := parseID(w, r)
+		if !ok {
+			return
+		}
+
+		form, err := readInput(w, r)
+		if err != nil {
+			fail(w, r, http.StatusBadRequest, "body tidak valid: "+err.Error())
+			return
+		}
+
+		complaint, msg := store.validate(form)
+		if msg != "" {
+			if isJSON(r) {
+				writeJSON(w, http.StatusBadRequest, map[string]string{"error": msg})
+				return
+			}
+			writeHTML(w, http.StatusBadRequest, pageData{
+				Title:  "Edit Pengaduan",
+				Mode:   "form",
+				IsEdit: true,
+				Action: fmt.Sprintf("/complaints/%d", id),
+				Users:  store.Users(),
+				Assets: store.Assets(),
+				Form:   form,
+				Error:  msg,
+			})
+			return
+		}
+
+		updated, err := store.Update(id, complaint)
+		if err != nil {
+			if errors.Is(err, errNotFound) {
+				notFound(w, r)
+				return
+			}
+			log.Println("update complaint:", err)
+			fail(w, r, http.StatusInternalServerError, "gagal menyimpan data")
+			return
+		}
+
+		if isJSON(r) {
+			writeJSON(w, http.StatusOK, updated)
+			return
+		}
+		http.Redirect(w, r, fmt.Sprintf("/complaints/%d", id), http.StatusSeeOther)
+	}
+}
+
+// deleteComplaint dipakai oleh DELETE (API, balas 204) dan POST .../delete (form, redirect).
+func deleteComplaint(store *Store, redirect bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, ok := parseID(w, r)
+		if !ok {
+			return
+		}
+
+		if err := store.Delete(id); err != nil {
+			if errors.Is(err, errNotFound) {
+				notFound(w, r)
+				return
+			}
+			log.Println("delete complaint:", err)
+			fail(w, r, http.StatusInternalServerError, "gagal menghapus data")
+			return
+		}
+
+		if redirect {
+			http.Redirect(w, r, "/complaints", http.StatusSeeOther)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// ======================= ROUTING =======================
+
+func newMux(store *Store) http.Handler {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		writeHTML(w, http.StatusOK, pageData{Title: "Sistem Pengaduan", Mode: "index", Complaints: store.All()})
+	})
+
+	// ---------- READ (daftar) ----------
+
+	mux.HandleFunc("GET /complaints", func(w http.ResponseWriter, r *http.Request) {
+		if wantsJSON(r) {
+			writeJSON(w, http.StatusOK, store.All())
+			return
+		}
+		writeHTML(w, http.StatusOK, pageData{Title: "Daftar Pengaduan", Mode: "showComplaint", Complaints: store.All()})
+	})
+
+	mux.HandleFunc("GET /assets", func(w http.ResponseWriter, r *http.Request) {
+		if wantsJSON(r) {
+			writeJSON(w, http.StatusOK, store.AllAssets())
+			return
+		}
+		writeHTML(w, http.StatusOK, pageData{Title: "Daftar Asset", Mode: "showAsset", Assets: store.AllAssets()})
+	})
+
+	// ---------- CREATE (form) ----------
+
+	// Rute literal "/new" lebih spesifik dari "/{id}", jadi tidak bentrok.
+	mux.HandleFunc("GET /complaints/new", func(w http.ResponseWriter, r *http.Request) {
+		writeHTML(w, http.StatusOK, pageData{
+			Title:  "Tambah Pengaduan",
+			Mode:   "form",
+			Action: "/complaints",
+			Users:  store.Users(),
+			Assets: store.Assets(),
+			Form:   formData{Priority: "1", Status: "urgent"},
+		})
+	})
+
+	mux.HandleFunc("GET /assets/new", func(w http.ResponseWriter, r *http.Request) {
+		writeHTML(w, http.StatusOK, pageData{
+			Title:  "Tambah Assets",
+			Mode:   "formAsset",
+			Action: "/assets",
+			Users:  store.Users(),
+			Assets: store.Assets(),
+			Form:   formData{Priority: "1", Status: "urgent"},
+		})
+	})
+
+	// ---------- CREATE (proses): form HTML maupun JSON ----------
+
+	mux.HandleFunc("POST /complaints", createComplaint(store))
+
+	// ---------- READ (detail) ----------
+
+	mux.HandleFunc("GET /complaints/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id, ok := parseID(w, r)
+		if !ok {
+			return
+		}
+
+		complaint, found := store.Find(id)
+		if !found {
+			notFound(w, r)
+			return
+		}
+
+		if wantsJSON(r) {
+			writeJSON(w, http.StatusOK, complaint)
+			return
+		}
+		writeHTML(w, http.StatusOK, pageData{Title: complaint.Title, Mode: "detailComplaint", Complaint: complaint})
+	})
+
+	// ---------- UPDATE ----------
+
+	// Menampilkan form yang sudah terisi data lama.
+	mux.HandleFunc("GET /complaints/{id}/edit", func(w http.ResponseWriter, r *http.Request) {
+		id, ok := parseID(w, r)
+		if !ok {
+			return
+		}
+
+		complaint, found := store.Find(id)
+		if !found {
+			http.NotFound(w, r)
+			return
+		}
+
+		writeHTML(w, http.StatusOK, pageData{
+			Title:  "Edit Pengaduan",
+			Mode:   "form",
+			IsEdit: true,
+			Action: fmt.Sprintf("/complaints/%d", id),
+			Users:  store.Users(),
+			Assets: store.Assets(),
+			Form:   formFromComplaint(complaint),
+		})
+	})
+
+	// PUT untuk API (Postman, fetch). POST untuk form HTML (browser hanya mendukung GET/POST).
+	// Keduanya memakai handler yang sama, dan sama-sama menerima form maupun JSON.
+	mux.HandleFunc("PUT /complaints/{id}", updateComplaint(store))
+	mux.HandleFunc("POST /complaints/{id}", updateComplaint(store))
+
+	// ---------- DELETE ----------
+
+	// DELETE untuk API (balas 204), POST .../delete untuk tombol di halaman HTML (redirect).
+	mux.HandleFunc("DELETE /complaints/{id}", deleteComplaint(store, false))
+	mux.HandleFunc("POST /complaints/{id}/delete", deleteComplaint(store, true))
+
+	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok\n"))
+	})
+
+	return mux
+}
+
+// ======================= LOAD / SAVE FILE =======================
 
 // loadComplaints boleh mengembalikan data kosong, karena semua pengaduan
 // bisa saja sudah dihapus lewat fitur delete.
@@ -571,9 +712,11 @@ func saveComplaints(path string, complaints []Complaints) error {
 	return os.Rename(tmp, path)
 }
 
+// ======================= RENDER HTML =======================
+
 type pageData struct {
 	Title      string
-	Mode       string // "index", "detail", atau "form", "formAssets"
+	Mode       string // "index", "detail", "form", "formAsset", dst.
 	IsEdit     bool   // true jika form dipakai untuk edit
 	Action     string // URL tujuan submit form
 	Complaints []Complaints
@@ -586,7 +729,6 @@ type pageData struct {
 }
 
 func writeHTML(w http.ResponseWriter, status int, data pageData) {
-
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(status)
 
@@ -597,7 +739,6 @@ func writeHTML(w http.ResponseWriter, status int, data pageData) {
 	}
 
 	// Body
-
 	if err := bodyTemplate.Execute(w, data); err != nil {
 		log.Println("write body:", err)
 		return

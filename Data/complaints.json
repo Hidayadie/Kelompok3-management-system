@@ -3,44 +3,33 @@
     "id": 1,
     "code": "CMP-2026-001",
     "userID": 1,
-    "assetID": 3,
-    "title": "Printer tidak bisa mencetak1",
-    "description": "Printer menyala tetapi dokumen tidak dapat dicetak",
-    "priority": 0.85,
-    "status": "urgent",
-    "note": "Perlu pemeriksaan teknisi segera"
+    "assetID": 2,
+    "title": "Printer tidak bisa mencetak",
+    "description": "Printer lantai 2 menampilkan error paper jam padahal tidak ada kertas tersangkut",
+    "priority": 0.3,
+    "status": "low",
+    "note": "Menunggu jadwal pengecekan teknisi"
   },
   {
-    "id": 2,
-    "code": "CMP-2026-002",
+    "id": 5,
+    "code": "CMP-2026-005",
     "userID": 4,
-    "assetID": 1,
-    "title": "Laptop lambat",
-    "description": "Laptop mengalami penurunan performa ketika membuka aplikasi",
-    "priority": 0.5,
-    "status": "middle",
-    "note": "Perlu pengecekan kapasitas storage dan aplikasi berjalan"
-  },
-  {
-    "id": 3,
-    "code": "CMP-2026-003",
-    "userID": 2,
-    "assetID": 4,
-    "title": "Koneksi jaringan tidak stabil",
-    "description": "Koneksi internet beberapa kali terputus",
-    "priority": 0.55,
-    "status": "middle",
-    "note": "Teknisi melakukan pengecekan router"
-  },
-  {
-    "id": 4,
-    "code": "CMP-2026-004",
-    "userID": 1,
     "assetID": 5,
-    "title": "Monitor berkedip",
-    "description": "Monitor mengalami kedipan ketika digunakan",
+    "title": "Server aplikasi tidak bisa diakses",
+    "description": "Aplikasi internal tidak dapat dibuka sejak pagi dan muncul error timeout",
+    "priority": 0.95,
+    "status": "high",
+    "note": "Prioritas utama, tim infrastruktur sedang menangani"
+  },
+  {
+    "id": 6,
+    "code": "CMP-2026-006",
+    "userID": 2,
+    "assetID": 6,
+    "title": "Mouse tidak terdeteksi",
+    "description": "Mouse USB tidak terbaca di komputer meskipun sudah dicolok ulang",
     "priority": 0.2,
     "status": "low",
-    "note": "Menunggu pemeriksaan teknisi"
+    "note": "Akan diganti dengan unit cadangan"
   }
 ]
