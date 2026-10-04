@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1,
+    "code": "CMP-2026-001",
+    "userID": 1,
+    "assetID": 2,
+    "title": "Printer tidak bisa mencetak",
+    "description": "Printer lantai 2 menampilkan error paper jam padahal tidak ada kertas tersangkut",
+    "priority": 0.3,
+    "status": "low",
+    "note": "Menunggu jadwal pengecekan teknisi"
+  },
+  {
+    "id": 5,
+    "code": "CMP-2026-005",
+    "userID": 4,
+    "assetID": 5,
+    "title": "Server aplikasi tidak bisa diakses",
+    "description": "Aplikasi internal tidak dapat dibuka sejak pagi dan muncul error timeout",
+    "priority": 0.95,
+    "status": "high",
+    "note": "Prioritas utama, tim infrastruktur sedang menangani"
+  },
+  {
+    "id": 6,
+    "code": "CMP-2026-006",
+    "userID": 2,
+    "assetID": 6,
+    "title": "Mouse tidak terdeteksi",
+    "description": "Mouse USB tidak terbaca di komputer meskipun sudah dicolok ulang",
+    "priority": 0.2,
+    "status": "low",
+    "note": "Akan diganti dengan unit cadangan"
+  }
+]
