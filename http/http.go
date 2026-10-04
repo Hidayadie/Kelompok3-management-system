@@ -1,4 +1,5 @@
-package asset
+
+package http_test  
 
 import (
 	"encoding/json"
@@ -8,8 +9,6 @@ import (
 	"strings"
 	"time"
 
-	assetio "project-test/io"
-	"project-test/model"
 )
 
 func RegisterRoutes(mux *http.ServeMux) {
@@ -134,3 +133,4 @@ func writeError(w http.ResponseWriter, status int, message string) {
 		"error": message,
 	})
 }
+

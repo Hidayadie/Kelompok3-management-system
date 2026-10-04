@@ -1,10 +1,9 @@
-package main
-
+package template 
 import (
 	"html/template"
 )
 
-var bodyTemplate = template.Must(template.New("body").Parse(`
+var BodyTemplate = template.Must(template.New("body").Parse(`
 
 <main>
 

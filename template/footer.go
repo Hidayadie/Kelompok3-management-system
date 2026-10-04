@@ -1,10 +1,10 @@
-package main
+package template
 
 import (
 	"html/template"
 )
 
-var footerTemplate = template.Must(template.New("footer").Parse(`
+var FooterTemplate = template.Must(template.New("footer").Parse(`
 
 <footer>
 	<hr>

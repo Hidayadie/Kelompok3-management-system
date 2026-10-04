@@ -1,10 +1,10 @@
-package main
+package template 
 
 import (
 	"html/template"
 )
 
-var headerTemplate = template.Must(template.New("header").Parse(`
+var HeaderTemplate = template.Must(template.New("header").Parse(`
 <!doctype html>
 <html lang="id">
 
