@@ -1,6 +1,40 @@
 package main
 
 import (
+	"log"
+	"net/http"
+	"time"
+
+	"project-test/handler"
+	"project-test/store"
+)
+
+const addr = ":2100"
+
+func main() {
+	st, err := store.New(store.Paths{
+		Complaints: "data/complaints.json",
+		Users:      "data/users.json",
+		Assets:     "data/assets.json",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           handler.New(st),
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+
+	log.Println("server listening on", addr)
+	log.Fatal(srv.ListenAndServe())
+}
+
+/*
+package main
+
+import (
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,233 +43,18 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
 
 	"project-test/template"
+	"project-test/model"
+
 )
 
 const addr = ":2100"
 
-var errNotFound = errors.New("complaint not found")
 
-// ======================= MODEL =======================
 
-type Complaints struct {
-	ID          int     `json:"id"`
-	Code        string  `json:"code"`
-	UserID      int     `json:"userID"`
-	AssetID     int     `json:"assetID"`
-	Title       string  `json:"title"`
-	Description string  `json:"description"`
-	Priority    float64 `json:"priority"`
-	Status      string  `json:"status"`
-	Note        string  `json:"note"`
-}
 
-type User struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
 
-type Category struct {
-	CategoryID   int    `json:"categoryID"`
-	NameCategory string `json:"nameCategory"`
-}
-
-type Location struct {
-	LocationID   int    `json:"locationID"`
-	NamaLocation string `json:"namaLocation"`
-	Jenis        string `json:"jenis"`
-}
-
-type Assets struct {
-	AsetID      int        `json:"asetID"`
-	CodeAset    string     `json:"codeAset"`
-	NameAsset   string     `json:"nameAsset"`
-	Categorys   []Category `json:"categorys"`
-	Locations   []Location `json:"locations"`
-	Condition   string     `json:"condition"`
-	Status      bool       `json:"status"`
-	Description string     `json:"description"`
-	QtyIn       int        `json:"qtyIn"`
-	QtyOut      int        `json:"qtyOut"`
-	QtyReal     int        `json:"qtyReal"`
-	UpdateAt    time.Time  `json:"updateAt"`
-}
-
-// complaintJSON adalah bentuk body JSON untuk POST dan PUT.
-// id dan code dibuat otomatis oleh server, jadi tidak perlu dikirim.
-type complaintJSON struct {
-	UserID      int     `json:"userID"`
-	AssetID     int     `json:"assetID"`
-	Title       string  `json:"title"`
-	Description string  `json:"description"`
-	Priority    float64 `json:"priority"`
-	Status      string  `json:"status"`
-	Note        string  `json:"note"`
-}
-
-// ======================= STORE =======================
-
-// Store menyimpan data di memori dan menyinkronkannya ke file JSON.
-type Store struct {
-	mu     sync.RWMutex
-	path   string
-	data   []Complaints
-	users  []User   // hanya dibaca, dimuat sekali dari users.json
-	assets []Assets // hanya dibaca, dimuat sekali dari assets.json
-}
-
-func NewStore(complaintsPath, usersPath, assetsPath string) (*Store, error) {
-	data, err := loadComplaints(complaintsPath)
-	if err != nil {
-		return nil, err
-	}
-	users, err := loadUsers(usersPath)
-	if err != nil {
-		return nil, err
-	}
-	assets, err := loadAssets(assetsPath)
-	if err != nil {
-		return nil, err
-	}
-	return &Store{path: complaintsPath, data: data, users: users, assets: assets}, nil
-}
-
-func (s *Store) Users() []User {
-	return s.users
-}
-
-func (s *Store) Assets() []Assets {
-	return s.assets
-}
-
-func (s *Store) HasAsset(id int) bool {
-	for _, a := range s.assets {
-		if a.AsetID == id {
-			return true
-		}
-	}
-	return false
-}
-
-func (s *Store) HasUser(id int) bool {
-	for _, u := range s.users {
-		if u.ID == id {
-			return true
-		}
-	}
-	return false
-}
-
-// validate memvalidasi input, termasuk memastikan user dan asset ada di data JSON.
-func (s *Store) validate(f formData) (Complaints, string) {
-	c, msg := f.toComplaint()
-	if msg == "" && !s.HasUser(c.UserID) {
-		msg = "User tidak ditemukan di data users."
-	}
-	if msg == "" && !s.HasAsset(c.AssetID) {
-		msg = "Asset tidak ditemukan di data assets."
-	}
-	return c, msg
-}
-
-// All mengembalikan salinan data agar aman dibaca bersamaan.
-func (s *Store) All() []Complaints {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	out := make([]Complaints, len(s.data))
-	copy(out, s.data)
-	return out
-}
-
-func (s *Store) AllAssets() []Assets {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	out := make([]Assets, len(s.assets))
-	copy(out, s.assets)
-	return out
-}
-
-func (s *Store) Find(id int) (Complaints, bool) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	for _, c := range s.data {
-		if c.ID == id {
-			return c, true
-		}
-	}
-	return Complaints{}, false
-}
-
-// Add menambah pengaduan baru: ID dan Code dibuat otomatis, lalu disimpan ke file.
-func (s *Store) Add(c Complaints) (Complaints, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	maxID := 0
-	for _, existing := range s.data {
-		if existing.ID > maxID {
-			maxID = existing.ID
-		}
-	}
-	c.ID = maxID + 1
-	c.Code = fmt.Sprintf("CMP-%03d", c.ID)
-
-	updated := append(append([]Complaints{}, s.data...), c)
-	if err := saveComplaints(s.path, updated); err != nil {
-		return Complaints{}, err
-	}
-	s.data = updated
-	return c, nil
-}
-
-// Update mengganti isi pengaduan dengan ID tertentu. ID dan Code tidak berubah.
-func (s *Store) Update(id int, c Complaints) (Complaints, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	for i, existing := range s.data {
-		if existing.ID != id {
-			continue
-		}
-
-		c.ID = existing.ID
-		c.Code = existing.Code
-
-		updated := append([]Complaints{}, s.data...)
-		updated[i] = c
-		if err := saveComplaints(s.path, updated); err != nil {
-			return Complaints{}, err
-		}
-		s.data = updated
-		return c, nil
-	}
-	return Complaints{}, errNotFound
-}
-
-// Delete menghapus pengaduan dengan ID tertentu lalu menyimpan ke file.
-func (s *Store) Delete(id int) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	for i, existing := range s.data {
-		if existing.ID != id {
-			continue
-		}
-
-		updated := make([]Complaints, 0, len(s.data)-1)
-		updated = append(updated, s.data[:i]...)
-		updated = append(updated, s.data[i+1:]...)
-		if err := saveComplaints(s.path, updated); err != nil {
-			return err
-		}
-		s.data = updated
-		return nil
-	}
-	return errNotFound
-}
 
 // ======================= MAIN =======================
 
@@ -640,115 +459,6 @@ func newMux(store *Store) http.Handler {
 	return mux
 }
 
-// ======================= LOAD / SAVE FILE =======================
 
-// loadComplaints boleh mengembalikan data kosong, karena semua pengaduan
-// bisa saja sudah dihapus lewat fitur delete.
-func loadComplaints(path string) ([]Complaints, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
 
-	var complaints []Complaints
-	if err := json.NewDecoder(file).Decode(&complaints); err != nil {
-		return nil, err
-	}
-
-	return complaints, nil
-}
-
-func loadUsers(path string) ([]User, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var users []User
-	if err := json.NewDecoder(file).Decode(&users); err != nil {
-		return nil, err
-	}
-	if len(users) == 0 {
-		return nil, errors.New("users data is empty")
-	}
-
-	return users, nil
-}
-
-func loadAssets(path string) ([]Assets, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var assets []Assets
-	if err := json.NewDecoder(file).Decode(&assets); err != nil {
-		return nil, err
-	}
-	if len(assets) == 0 {
-		return nil, errors.New("assets data is empty")
-	}
-
-	return assets, nil
-}
-
-// saveComplaints menulis ke file sementara dulu, lalu me-rename,
-// supaya file asli tidak rusak jika proses terhenti di tengah penulisan.
-func saveComplaints(path string, complaints []Complaints) error {
-	if complaints == nil {
-		complaints = []Complaints{} // supaya tersimpan sebagai [] bukan null
-	}
-
-	raw, err := json.MarshalIndent(complaints, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, raw, 0o644); err != nil {
-		return err
-	}
-	return os.Rename(tmp, path)
-}
-
-// ======================= RENDER HTML =======================
-
-type pageData struct {
-	Title      string
-	Mode       string // "index", "detail", "form", "formAsset", dst.
-	IsEdit     bool   // true jika form dipakai untuk edit
-	Action     string // URL tujuan submit form
-	Complaints []Complaints
-	Complaint  Complaints
-	Users      []User
-	Assets     []Assets
-	Asset      Assets
-	Form       formData
-	Error      string
-}
-
-func writeHTML(w http.ResponseWriter, status int, data pageData) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(status)
-
-	// Header
-	if err := template.HeaderTemplate.Execute(w, data); err != nil {
-		log.Println("write header:", err)
-		return
-	}
-
-	// Body
-	if err := template.BodyTemplate.Execute(w, data); err != nil {
-		log.Println("write body:", err)
-		return
-	}
-
-	// Footer
-	if err := template.FooterTemplate.Execute(w, data); err != nil {
-		log.Println("write footer:", err)
-		return
-	}
-}
+*/

@@ -6,7 +6,7 @@
     "assetID": 2,
     "title": "Printer tidak bisa mencetak",
     "description": "Printer lantai 2 menampilkan error paper jam padahal tidak ada kertas tersangkut",
-    "priority": 0.3,
+    "priority": 0.4,
     "status": "low",
     "note": "Menunggu jadwal pengecekan teknisi"
   },

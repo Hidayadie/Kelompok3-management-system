@@ -1,0 +1,63 @@
+{{define "content"}}
+<div class="page-header">
+	<h1>{{.Title}}</h1>
+</div>
+
+{{if .Data.Error}}
+	<p class="error">{{.Data.Error}}</p>
+{{end}}
+
+<form method="post" action="/assets">
+
+	<label for="codeAset">Kode Aset</label>
+	<input type="text" id="codeAset" name="codeAset" placeholder="Contoh: AST-LAP-001" required
+		value="{{.Data.Input.CodeAset}}">
+
+	<label for="nameAsset">Nama Aset</label>
+	<input type="text" id="nameAsset" name="nameAsset" placeholder="Contoh: Laptop Lenovo ThinkPad E14" required
+		value="{{.Data.Input.NameAsset}}">
+
+	<label for="categoryID">Kategori</label>
+	<select id="categoryID" name="categoryID" required>
+		<option value="">-- Pilih Kategori --</option>
+		{{range .Data.Categories}}
+		<option value="{{.CategoryID}}" {{if eq .CategoryID $.Data.Input.CategoryID}}selected{{end}}>{{.NameCategory}}</option>
+		{{end}}
+	</select>
+
+	<label for="locationID">Lokasi</label>
+	<select id="locationID" name="locationID" required>
+		<option value="">-- Pilih Lokasi --</option>
+		{{range .Data.Locations}}
+		<option value="{{.LocationID}}" {{if eq .LocationID $.Data.Input.LocationID}}selected{{end}}>{{.NamaLocation}}</option>
+		{{end}}
+	</select>
+
+	<label for="condition">Kondisi</label>
+	<select id="condition" name="condition" required>
+		<option value="">-- Pilih Kondisi --</option>
+		{{range .Data.Conditions}}
+		<option value="{{.}}" {{if eq . $.Data.Input.Condition}}selected{{end}}>{{.}}</option>
+		{{end}}
+	</select>
+
+	<label for="status">Status</label>
+	<select id="status" name="status" required>
+		<option value="true" {{if .Data.Input.Status}}selected{{end}}>Aktif</option>
+		<option value="false" {{if not .Data.Input.Status}}selected{{end}}>Tidak Aktif</option>
+	</select>
+
+	<label for="qtyIn">Jumlah Masuk</label>
+	<input type="number" id="qtyIn" name="qtyIn" min="0" required value="{{.Data.Input.QtyIn}}">
+
+	<label for="description">Deskripsi</label>
+	<textarea id="description" name="description" rows="4"
+		placeholder="Masukkan deskripsi aset...">{{.Data.Input.Description}}</textarea>
+
+	<div class="actions">
+		<button type="submit" class="btn">Simpan Aset</button>
+		<a href="/assets" class="btn btn-secondary">Batal</a>
+	</div>
+
+</form>
+{{end}}

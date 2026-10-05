@@ -1,0 +1,30 @@
+{{define "content"}}
+{{with .Data.Complaint}}
+<div class="page-header">
+	<a class="btn btn-secondary" href="/complaints">Kembali ke daftar pengaduan</a>
+</div>
+
+<article>
+	<h1>{{.Title}}</h1>
+	<p>{{.Description}}</p>
+
+	<table>
+		<tr><th>ID</th><td>{{.ID}}</td></tr>
+		<tr><th>Kode</th><td>{{.Code}}</td></tr>
+		<tr><th>User ID</th><td>{{.UserID}}</td></tr>
+		<tr><th>Asset ID</th><td>{{.AssetID}}</td></tr>
+		<tr><th>Prioritas</th><td>{{.Priority}}</td></tr>
+		<tr><th>Status</th><td>{{title .Status}}</td></tr>
+		<tr><th>Catatan</th><td>{{.Note}}</td></tr>
+	</table>
+
+	<div class="actions">
+		<a class="btn btn-warn" href="/complaints/{{.ID}}/edit">Edit</a>
+		<form class="inline" method="post" action="/complaints/{{.ID}}/delete"
+			onsubmit="return confirm('Hapus pengaduan ini?')">
+			<button class="btn btn-danger" type="submit">Hapus</button>
+		</form>
+	</div>
+</article>
+{{end}}
+{{end}}

@@ -1,0 +1,60 @@
+{{define "content"}}
+<div class="page-header">
+	<h1>{{.Title}}</h1>
+</div>
+
+{{if .Data.Error}}
+	<p class="error">{{.Data.Error}}</p>
+{{end}}
+
+<form method="post" action="{{.Data.Action}}">
+
+	<label for="userID">User</label>
+	<select id="userID" name="userID" required>
+		<option value="">-- Pilih user --</option>
+		{{range .Data.Users}}
+		<option value="{{.ID}}" {{if eq .ID $.Data.Complaint.UserID}}selected{{end}}>
+			{{.ID}} - {{.Name}}
+		</option>
+		{{end}}
+	</select>
+
+	<label for="assetID">Asset</label>
+	<select id="assetID" name="assetID" required>
+		<option value="">-- Pilih asset --</option>
+		{{range .Data.Assets}}
+		<option value="{{.AsetID}}" {{if eq .AsetID $.Data.Complaint.AssetID}}selected{{end}}>
+			{{.CodeAset}} - {{.NameAsset}}
+		</option>
+		{{end}}
+	</select>
+
+	<label for="title">Judul</label>
+	<input id="title" name="title" type="text" required value="{{.Data.Complaint.Title}}">
+
+	<label for="description">Deskripsi</label>
+	<textarea id="description" name="description" rows="4" required>{{.Data.Complaint.Description}}</textarea>
+
+	<label for="priority">Prioritas</label>
+	<input id="priority" name="priority" type="number" min="0" step="any" required value="{{.Data.Complaint.Priority}}">
+
+	<label for="status">Status</label>
+	<select id="status" name="status">
+		{{range .Data.Statuses}}
+		<option value="{{.}}" {{if eq . $.Data.Complaint.Status}}selected{{end}}>{{title .}}</option>
+		{{end}}
+	</select>
+
+	<label for="note">Catatan (opsional)</label>
+	<textarea id="note" name="note" rows="2">{{.Data.Complaint.Note}}</textarea>
+
+	<div class="actions">
+		<button class="btn" type="submit">
+			{{if .Data.IsEdit}}Simpan Perubahan{{else}}Simpan{{end}}
+		</button>
+		<a class="btn btn-secondary" href="/complaints">Batal</a>
+	</div>
+
+</form>
+
+{{end}}

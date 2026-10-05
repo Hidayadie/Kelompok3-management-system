@@ -1,0 +1,37 @@
+{{define "layout"}}<!doctype html>
+<html lang="id">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>{{.Title}}</title>
+	<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="site-header">
+	<nav>
+		<h2>Manajemen Aset</h2>
+		<ul>
+			<li><a href="/" {{if eq .Active "home"}}class="active"{{end}}>Home</a></li>
+			<li><a href="/assets" {{if eq .Active "assets"}}class="active"{{end}}>Kelola Aset</a></li>
+			<li><a href="/categories" {{if eq .Active "categories"}}class="active"{{end}}>Kelola Kategori</a></li>
+			<li><a href="/complaints" {{if eq .Active "complaints"}}class="active"{{end}}>Kelola Keluhan</a></li>
+			<li><a href="/loans" {{if eq .Active "loans"}}class="active"{{end}}>Kelola Peminjaman Aset</a></li>
+			<li><a href="/users" {{if eq .Active "users"}}class="active"{{end}}>Kelola User</a></li>
+		</ul>
+	</nav>
+</header>
+
+<main>
+{{template "content" .}}
+</main>
+
+<footer>
+	<hr>
+	<p>&copy; 2026 Sistem Manajemen Aset</p>
+</footer>
+
+</body>
+</html>
+
+{{end}}

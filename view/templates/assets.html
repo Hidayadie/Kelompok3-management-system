@@ -1,0 +1,47 @@
+{{define "content"}}
+<div class="page-header">
+	<h1>{{.Title}}</h1>
+	<a class="btn" href="/assets/new">+ Tambah Asset</a>
+</div>
+
+<section>
+<table>
+	<thead>
+		<tr>
+			<th>ID</th>
+			<th>Kode Asset</th>
+			<th>Nama Asset</th>
+			<th>Kategori</th>
+			<th>Lokasi</th>
+			<th>Kondisi</th>
+			<th>Status</th>
+			<th>Deskripsi</th>
+			<th>Qty Masuk</th>
+			<th>Qty Keluar</th>
+			<th>Qty Saat Ini</th>
+		</tr>
+	</thead>
+	<tbody>
+	{{range .Data.Assets}}
+		<tr>
+			<td>{{.AsetID}}</td>
+			<td>{{.CodeAset}}</td>
+			<td>{{.NameAsset}}</td>
+			<td>{{range $i, $c := .Categorys}}{{if $i}}, {{end}}{{$c.NameCategory}}{{end}}</td>
+			<td>{{range $i, $l := .Locations}}{{if $i}}, {{end}}{{$l.NamaLocation}}{{end}}</td>
+			<td>{{.Condition}}</td>
+			<td>{{if .Status}}Aktif{{else}}Tidak Aktif{{end}}</td>
+			<td>{{.Description}}</td>
+			<td>{{.QtyIn}}</td>
+			<td>{{.QtyOut}}</td>
+			<td>{{.QtyReal}}</td>
+		</tr>
+	{{else}}
+		<tr>
+			<td colspan="11">Belum ada aset.</td>
+		</tr>
+	{{end}}
+	</tbody>
+</table>
+</section>
+{{end}}

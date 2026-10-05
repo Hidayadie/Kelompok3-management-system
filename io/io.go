@@ -1,13 +1,12 @@
 package io
-
+/*
 import (
 	"encoding/json"
-	"log"
 	"os"
-
-	"project-test/model"
+	"errors"
 
 )
+
 
 
 func ReadAsset() []model.Asset {
@@ -38,4 +37,4 @@ func WriteAsset(assets []model.Asset) {
 		log.Fatal(err)
 	}
 }
-
+*/ 
