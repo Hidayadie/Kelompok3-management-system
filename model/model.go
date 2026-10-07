@@ -1,6 +1,6 @@
-// Package model hanya berisi definisi data dan aturan yang tidak butuh I/O.
-// Package ini tidak mengimpor package lain dari project, jadi tidak mungkin
-// terjadi import melingkar.
+// Package model hanya berisi definisi data/struct
+// Package model = package paling bawah... wajib aman kalo di import
+// ke package lain (harus)
 package model
 
 import (
@@ -77,6 +77,8 @@ var (
 	Statuses   = []string{"urgent", "high", "middle", "low"}
 	Conditions = []string{"Baik", "Rusak Ringan", "Rusak Berat"}
 
+
+	// TODO: tambah i/o data category/location (malasss)
 	Categories = []Category{
 		{CategoryID: 1, NameCategory: "Perangkat Komputer"},
 		{CategoryID: 2, NameCategory: "Perangkat Jaringan"},
@@ -107,15 +109,15 @@ func FindLocation(id int) (Location, bool) {
 
 // ======================= ATURAN: COMPLAINT =======================
 
-// Normalize merapikan spasi di field teks.
+// merapikan spasi teks
 func (c *Complaint) Normalize() {
 	c.Title = strings.TrimSpace(c.Title)
 	c.Description = strings.TrimSpace(c.Description)
 	c.Note = strings.TrimSpace(c.Note)
 }
 
-// Validate memeriksa aturan yang hanya butuh isi struct itu sendiri.
-// Pemeriksaan "user/asset ada atau tidak" ada di store.
+// validate memeriksa aturan yang hanya butuh isi struct itu sendiri
+// pemeriksaan "user/asset ada atau tidak" ada di store.
 func (c Complaint) Validate() error {
 	switch {
 	case c.UserID <= 0:
@@ -157,7 +159,7 @@ func (in AssetInput) Validate() error {
 	return nil
 }
 
-// ToAsset membentuk Asset lengkap dari isian. AsetID diisi oleh store.
+// ToAsset membentuk Asset lengkap dari isian. AsetID diisi oleh store
 func (in AssetInput) ToAsset() Asset {
 	a := Asset{
 		CodeAset:    strings.TrimSpace(in.CodeAset),
@@ -166,7 +168,7 @@ func (in AssetInput) ToAsset() Asset {
 		Status:      in.Status,
 		Description: strings.TrimSpace(in.Description),
 		QtyIn:       in.QtyIn,
-		QtyReal:     in.QtyIn, // aset baru: belum ada yang keluar
+		QtyReal:     in.QtyIn, // aset baru: blum ada yang keluar
 		UpdateAt:    time.Now(),
 	}
 	if c, ok := FindCategory(in.CategoryID); ok {
@@ -178,79 +180,3 @@ func (in AssetInput) ToAsset() Asset {
 	return a
 }
 
-/*
-package model
-
-import (
-	"time"
-	"sync"
-
-)
-// ======================= MODEL =======================
-
-type Complaint struct {
-	ID          int     `json:"id"`
-	Code        string  `json:"code"`
-	UserID      int     `json:"userID"`
-	AssetID     int     `json:"assetID"`
-	Title       string  `json:"title"`
-	Description string  `json:"description"`
-	Priority    float64 `json:"priority"`
-	Status      string  `json:"status"`
-	Note        string  `json:"note"`
-}
-
-type User struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
-
-type Category struct {
-	CategoryID   int    `json:"categoryID"`
-	NameCategory string `json:"nameCategory"`
-}
-
-type Location struct {
-	LocationID   int    `json:"locationID"`
-	NamaLocation string `json:"namaLocation"`
-	Jenis        string `json:"jenis"`
-}
-
-type Asset struct {
-	AsetID      int        `json:"asetID"`
-	CodeAset    string     `json:"codeAset"`
-	NameAsset   string     `json:"nameAsset"`
-	Categorys   []Category `json:"categorys"`
-	Locations   []Location `json:"locations"`
-	Condition   string     `json:"condition"`
-	Status      bool       `json:"status"`
-	Description string     `json:"description"`
-	QtyIn       int        `json:"qtyIn"`
-	QtyOut      int        `json:"qtyOut"`
-	QtyReal     int        `json:"qtyReal"`
-	UpdateAt    time.Time  `json:"updateAt"`
-}
-
-// complaintJSON adalah bentuk body JSON untuk POST dan PUT.
-// id dan code dibuat otomatis oleh server, jadi tidak perlu dikirim.
-type complaintJSON struct {
-	UserID      int     `json:"userID"`
-	AssetID     int     `json:"assetID"`
-	Title       string  `json:"title"`
-	Description string  `json:"description"`
-	Priority    float64 `json:"priority"`
-	Status      string  `json:"status"`
-	Note        string  `json:"note"`
-}
-
-// ======================= STORE =======================
-
-// Store menyimpan data di memori dan menyinkronkannya ke file JSON.
-type Store struct {
-	mu     sync.RWMutex
-	path   string
-	data   []Complaint
-	users  []User   // hanya dibaca, dimuat sekali dari users.json
-	assets []Asset // hanya dibaca, dimuat sekali dari assets.json
-}
-*/ 

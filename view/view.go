@@ -1,6 +1,4 @@
-// Package view merender halaman HTML. Template dan CSS ikut masuk ke dalam binary (go:embed),
-// jadi program bisa dijalankan dari folder mana pun. Konsekuensinya: setelah mengedit file
-// di templates/ atau static/, program perlu di-build/run ulang.
+// Package view merender halaman html, templet/css ikut masuk ke binary (go:embed),
 package view
 
 import (
@@ -17,8 +15,8 @@ import (
 //go:embed templates/*.html static/*
 var files embed.FS
 
-// Page adalah pembungkus yang diterima layout. Data berisi isi khusus tiap halaman
-// dan diakses di template sebagai .Data.NamaField.
+// Struct page isinya... gitu 
+// diakses di template sebagai .Data.NamaField
 type Page struct {
 	Title  string
 	Active string // menu nav yang disorot: home, assets, complaints
@@ -35,8 +33,8 @@ var funcs = template.FuncMap{
 	},
 }
 
-// pages: satu template set per halaman (layout.html + halaman itu).
-// Dipisah supaya {{define "content"}} di tiap halaman tidak saling menimpa.
+// pages: satu template set per halaman (layout.html + halaman itu)
+// dipisah supaya {{define "content"}} di tiap halaman tidak saling menimpa
 var pages = map[string]*template.Template{}
 
 func init() {
@@ -55,7 +53,7 @@ func init() {
 	}
 }
 
-// Static melayani file di folder static/ (alamat: /static/...).
+// Static melayani file di folder static/ (alamat: /static/...)
 func Static() http.Handler {
 	return http.FileServerFS(files)
 }
@@ -81,52 +79,3 @@ func Render(w http.ResponseWriter, status int, page string, p Page) {
 	w.WriteHeader(status)
 	buf.WriteTo(w)
 }
-/*
-package view
-
-import (
-	"project-test/model"
-	"project-test/view/template"
-	"net/http"
-	"log"
-)
-
-// ======================= RENDER HTML =======================
-
-type pageData struct {
-	Title      string
-	Mode       string // "index", "detail", "form", "formAsset", dst.
-	IsEdit     bool   // true jika form dipakai untuk edit
-	Action     string // URL tujuan submit form
-	Complaints []model.Complaints
-	Complaint  model.Complaints
-	Users      []model.User
-	Assets     []model.Assets
-	Asset      model.Assets
-	Form       formData
-	Error      string
-}
-
-func writeHTML(w http.ResponseWriter, status int, data pageData) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(status)
-
-	// Header
-	if err := template.HeaderTemplate.Execute(w, data); err != nil {
-		log.Println("write header:", err)
-		return
-	}
-
-	// Body
-	if err := template.BodyTemplate.Execute(w, data); err != nil {
-		log.Println("write body:", err)
-		return
-	}
-
-	// Footer
-	if err := template.FooterTemplate.Execute(w, data); err != nil {
-		log.Println("write footer:", err)
-		return
-	}
-}
-*/ 

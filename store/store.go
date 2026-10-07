@@ -1,5 +1,5 @@
-// Package store mengurus penyimpanan data (sekarang file JSON, nanti bisa diganti database).
-// Package ini mengimpor model, tetapi tidak tahu apa-apa soal HTTP maupun HTML.
+// Package store mengurus penyimpanan data (sekarang file JSON, nanti bisa diganti database)
+// Package ini mengimpor model, tidak tahu apa apa soal http / html
 package store
 
 import (
@@ -20,8 +20,8 @@ type Paths struct {
 	Complaints, Users, Assets string
 }
 
-// Store menyimpan data di memori dan menyinkronkannya ke file JSON.
-// Pola tulis: salin slice -> ubah salinan -> simpan ke file -> baru ganti data di memori.
+// Store menyimpan data di memori dan menyinkronkannya ke file json
+// salin slice -> ubah salinan -> simpan ke file -> baru ganti data di memori
 // Jika penyimpanan gagal, data di memori tidak ikut berubah.
 type Store struct {
 	mu         sync.RWMutex
@@ -31,6 +31,7 @@ type Store struct {
 	assets     []model.Asset
 }
 
+// yg dipanggil main
 func New(p Paths) (*Store, error) {
 	complaints, err := loadJSON[model.Complaint](p.Complaints)
 	if err != nil {
@@ -78,7 +79,7 @@ func (s *Store) FindComplaint(id int) (model.Complaint, bool) {
 	return s.complaints[i], true
 }
 
-// ValidateComplaint = aturan model + pemeriksaan bahwa user dan asset benar-benar ada.
+// ValidateComplaint = aturan model + pemeriksaan bahwa user dan asset benar-benar ada
 func (s *Store) ValidateComplaint(c model.Complaint) error {
 	if err := c.Validate(); err != nil {
 		return err
@@ -95,7 +96,7 @@ func (s *Store) ValidateComplaint(c model.Complaint) error {
 	return nil
 }
 
-// AddComplaint membuat ID dan Code otomatis, lalu menyimpan ke file.
+// AddComplaint membuat ID dan Code otomatis, lalu menyimpan ke file
 func (s *Store) AddComplaint(c model.Complaint) (model.Complaint, error) {
 	c.Normalize()
 
@@ -117,7 +118,7 @@ func (s *Store) AddComplaint(c model.Complaint) (model.Complaint, error) {
 	return c, nil
 }
 
-// UpdateComplaint mengganti isi pengaduan. ID dan Code tidak berubah.
+// UpdateComplaint mengganti isi pengaduan. ID dan Code tidak berubah
 func (s *Store) UpdateComplaint(id int, c model.Complaint) (model.Complaint, error) {
 	c.Normalize()
 
@@ -173,7 +174,7 @@ func (s *Store) FindAsset(id int) (model.Asset, bool) {
 	return s.assets[i], true
 }
 
-// ValidateAsset = aturan model + kode aset tidak boleh kembar.
+// ValidateAsset = aturan model + kode aset tidak boleh kembar
 func (s *Store) ValidateAsset(in model.AssetInput) error {
 	if err := in.Validate(); err != nil {
 		return err
@@ -210,7 +211,9 @@ func (s *Store) AddAsset(in model.AssetInput) (model.Asset, error) {
 
 // ======================= FILE JSON =======================
 
-// clone selalu mengembalikan slice non-nil, supaya JSON-nya [] dan bukan null.
+// clone selalu mengembalikan slice non-nil, supaya json-nya [] dan bukan null.
+// mnding json kosong, bukan nil, json kosong = "data kosong/tidak ditemukan"
+// kalo nil ntr... duar gtw
 func clone[T any](s []T) []T {
 	return append([]T{}, s...)
 }
@@ -230,7 +233,8 @@ func loadJSON[T any](path string) ([]T, error) {
 }
 
 // saveJSON menulis ke file sementara dulu, lalu rename, supaya file asli
-// tidak rusak jika proses terhenti di tengah penulisan.
+// tidak rusak jika proses terhenti di tengah penulisan
+// jenisnya memakai any btw
 func saveJSON[T any](path string, items []T) error {
 	if items == nil {
 		items = []T{}
