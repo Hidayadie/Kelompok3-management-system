@@ -1,0 +1,571 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard Admin - Inventaris Cerdas</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f4f7fb;
+            color: #1e293b;
+            font-family: Arial, sans-serif;
+        }
+
+        /* SIDEBAR MENU VERTIKAL */
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: 250px;
+            height: 100vh;
+            padding: 24px 15px;
+            background: #102a56;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 10px 28px;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+        }
+
+        .brand-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #2563eb;
+            font-size: 23px;
+        }
+
+        .menu-title {
+            padding: 14px 12px 10px;
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        /* Memastikan setiap menu berada pada baris tersendiri */
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 5px;
+            width: 100%;
+        }
+
+        .sidebar .nav-link {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            width: 100%;
+            min-height: 45px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            color: #cbd5e1;
+            text-decoration: none;
+            white-space: nowrap;
+            font-size: 13px;
+        }
+
+        .sidebar .nav-link i {
+            width: 21px;
+            flex-shrink: 0;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: #2563eb;
+            color: white;
+        }
+        
+        .sidebar .logout {
+            margin-top: 20px;
+            border-top: 1px solid #334969;
+            border-radius: 0;
+            padding-top: 20px;
+        }
+
+        /* KONTEN UTAMA */
+        .main-content {
+            margin-left: 250px;
+            min-height: 100vh;
+            padding: 28px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .page-title {
+            margin-bottom: 7px;
+            font-size: 25px;
+            font-weight: bold;
+        }
+        
+        .muted {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .stat-card, .content-card {
+            height: 100%;
+            padding: 22px;
+            background: white;
+            border: 1px solid #e9eef5;
+            border-radius: 13px;
+            box-shadow: 0 3px 12px rgba(15, 23, 42, .03);
+        }
+
+        .stat-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            border-radius: 11px;
+            font-size: 22px;
+        }
+
+        .stat-number {
+            margin: 17px 0 5px;
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .section-title {
+            margin-bottom: 18px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .table thead th {
+            padding: 14px;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .table tbody td {
+            padding: 15px 14px;
+            font-size: 12px;
+            vertical-align: middle;
+        }
+
+        .asset-code {
+            color: #2563eb;
+            font-weight: bold;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 6px 9px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .good {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .activity {
+            display: flex;
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        .activity:last-child {
+            border-bottom: 0;
+        }
+
+        .activity-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            flex-shrink: 0;
+            border-radius: 10px;
+        }
+        
+        .quick-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px;
+            margin-bottom: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 9px;
+            color: #334155;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        
+        .quick-link:hover {
+            background: #eff6ff;
+        }
+        
+        .quick-link .bi-chevron-right {
+            margin-left: auto;
+        }
+
+        footer {
+            padding: 24px 0 5px;
+            color: #64748b;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 72px;
+                padding: 20px 8px;
+            }
+            
+            .brand {
+                justify-content: center;
+                padding: 0 0 25px;
+            }
+
+            .brand-text, .menu-title, .nav-text {
+                display: none;
+            }
+            
+            .sidebar .nav-link {
+                justify-content: center;
+                padding: 12px 5px;
+            }
+
+            .main-content {
+                margin-left: 72px;
+                padding: 16px 12px;
+            }
+            
+            .page-title {
+                font-size: 20px;
+            }
+            
+            .profile-text {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    
+    <!-- Sidebar diambil dari components/sidebar.html -->
+    <div id="sidebar-container"></div>
+    
+    <main class="main-content">
+        
+        <!-- Header  -->
+            <header class="topbar">
+        <div>
+            <h1 class="page-title">Asset</h1>
+            <div class="muted">List Data Asset</div>
+        </div>
+    </header>
+         <!-- TABEL ASET -->
+    
+ <!-- Konten data aset -->
+        <section class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="content-card">
+
+                    <!-- Judul dan tombol -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                        <div>
+                            <h2 class="section-title mb-1">Daftar Aset</h2>
+                            <div class="muted">Data inventaris aset</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button
+                                type="button"
+                                id="refreshAssets"
+                                class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-arrow-clockwise me-1"></i>
+                                Refresh
+                            </button>
+
+                          <button
+    type="button"
+    id="addAssetButton"
+    class="btn btn-primary btn-sm"
+    data-bs-toggle="modal"
+    data-bs-target="#addAssetModal">
+    <i class="bi bi-plus-lg me-1"></i>
+    Tambah Aset
+</button>
+                        </div>
+                    </div>
+
+                    <!-- Filter aset -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="assetFilter" class="form-label fw-semibold">
+                                Pilih Aset
+                            </label>
+
+                            <select
+                                id="assetFilter"
+                                class="form-select"
+                                style="width: 100%">
+                                <option value="">Semua Aset</option>
+                            </select>
+
+                            <small class="text-muted">
+                                Cari aset berdasarkan nama aset.
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Pesan sukses/error -->
+                    <div
+                        id="assetAlert"
+                        class="alert d-none"
+                        role="alert">
+                    </div>
+
+                    <!-- Tabel aset -->
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>No.</th>
+                                    <th>Kode Aset</th>
+                                    <th>Nama Aset</th>
+                                    <th>Kategori</th>
+                                    <th>Lokasi</th>
+                                    <th>Kondisi</th>
+                                    <th>Status</th>
+                                    <th>Jumlah</th>
+                                    <th>Terakhir Diperbarui</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="assetTableBody">
+                                <tr>
+                                    <td colspan="9" class="text-center py-4">
+                                        Memuat data aset...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Jumlah data -->
+                    <div
+                        id="assetCount"
+                        class="text-muted small mt-2">
+                        Total aset: 0
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+<!--MODAL BOOTSTRAP UBAH TAMBAH -->
+
+<!-- Modal Tambah Aset -->
+
+<!-- Modal Tambah Aset Bootstrap 5 -->
+<div class="modal fade" id="addAssetModal" tabindex="-1"
+     aria-labelledby="addAssetModalLabel" aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title fw-bold" id="addAssetModalLabel">
+                        <i class="bi bi-box-seam me-2"></i>Tambah Aset
+                    </h5>
+                    <small class="text-muted">Formulir data aset baru</small>
+                </div>
+
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+
+            <form id="addAssetForm">
+                <div class="modal-body">
+
+                    <div id="addAssetAlert"
+                         class="alert d-none"
+                         role="alert"></div>
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label for="assetCode" class="form-label">
+                                Kode Aset <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="assetCode"
+                                   name="code_asset" class="form-control"
+                                   placeholder="Contoh : AST-2026-003"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="assetName" class="form-label">
+                                Nama Aset <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="assetName"
+                                   name="nama_asset" class="form-control"
+                                   placeholder="Nama aset" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="assetCategory" class="form-label">
+                                Kategori <span class="text-danger">*</span>
+                            </label>
+                            <select id="assetCategory" name="category"
+                                    class="form-select" required>
+                                <option value="">Pilih kategori</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="assetLocation" class="form-label">
+                                Lokasi <span class="text-danger">*</span>
+                            </label>
+                            <select id="assetLocation" name="location"
+                                    class="form-select" required>
+                                <option value="">Pilih lokasi</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="assetCondition" class="form-label">
+                                Kondisi <span class="text-danger">*</span>
+                            </label>
+                            <select id="assetCondition" name="condition"
+                                    class="form-select" required>
+                                <option value="">Pilih kondisi</option>
+                                <option value="Baik">Baik</option>
+                                <option value="Rusak Ringan">Rusak Ringan</option>
+                                <option value="Rusak Berat">Rusak Berat</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="assetStatus" class="form-label">
+                                Status <span class="text-danger">*</span>
+                            </label>
+                            <select id="assetStatus" name="status"
+                                    class="form-select" required>
+                                <option value="true">Aktif</option>
+                                <option value="false">Tidak Aktif</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="assetQty" class="form-label">
+                                Jumlah <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" id="assetQty" name="qty_in"
+                                   class="form-control" min="1"
+                                   step="1" value="1" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="assetDescription" class="form-label">
+                                Deskripsi
+                            </label>
+                            <textarea id="assetDescription"
+                                      name="description"
+                                      class="form-control" rows="3"
+                                      placeholder="Keterangan aset"></textarea>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Batal
+                    </button>
+
+                    <button type="submit" id="saveAssetButton"
+                            class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>
+                        Simpan Aset
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+<!--Batas Modal Tambah-->
+
+<footer>
+    &copy; 2026 Sistem Manajemen Inventaris Cerdas
+</footer>
+    
+    
+    <!-- Library eksternal -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
+   
+   <!-- JavaScript lokal, di bagian bawah body -->
+<script src="../js/layout.js"></script>
+<script src="ajax/asset.js"></script>
+
+</body>
+</html>

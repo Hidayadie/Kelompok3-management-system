@@ -1,0 +1,38 @@
+package private
+
+import (
+	"net/http"
+
+	"gin-auth/internal/asset"
+	"gin-auth/internal/category"
+	"gin-auth/internal/dashboard"
+	"gin-auth/internal/location"
+	"gin-auth/internal/middleware"
+
+	"github.com/gin-gonic/gin"
+)
+
+func RegisterRoutes(
+	r *gin.Engine,
+	requireAuth gin.HandlerFunc,
+	categoryHandler *category.Handler,
+	locationHandler *location.Handler,
+	assetHandler *asset.Handler,
+	dashboardHandler *dashboard.Handler,
+) {
+	group := r.Group("/api/private")
+	group.Use(requireAuth)
+
+	category.RegisterRoutes(group, categoryHandler)
+	location.RegisterRoutes(group, locationHandler)
+	asset.RegisterRoutes(group, assetHandler)
+	dashboard.RegisterRoutes(group, dashboardHandler)
+	group.GET("/profile",
+		middleware.MockEndpoint("private.profile"),
+		func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{
+				"data": c.MustGet("user"),
+			})
+		},
+	)
+}

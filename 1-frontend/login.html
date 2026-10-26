@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | StockWise</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #0b63e5;
+            --primary-dark: #084fbd;
+            --accent: #4da3ff;
+            --navy: #0b1f4d;
+            --text: #1e293b;
+            --muted: #5b6b8c;
+            --border: #dbe4f3;
+            --background: #eaf2fe;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(1200px 600px at 10% -10%, #d6e6ff 0%, transparent 60%),
+                linear-gradient(180deg, #eef5ff 0%, #f6f9ff 100%);
+        }
+
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 1240px;
+            background: #fff;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 24px 70px rgba(15, 40, 100, 0.14);
+        }
+
+        /* ===== Panel kiri ===== */
+        .brand-panel {
+            position: relative;
+            min-height: 700px;
+            height: 100%;
+            padding: 50px 56px 44px;
+            color: #fff;
+            overflow: hidden;
+            background:
+                radial-gradient(700px 500px at 85% 80%, rgba(59, 130, 246, .45), transparent 65%),
+                linear-gradient(150deg, #0a4fc4 0%, #0a3a9e 50%, #062a78 100%);
+        }
+
+        .brand-content { position: relative; z-index: 2; max-width: 430px; }
+
+        .brand-top { display: flex; align-items: center; gap: 16px; }
+
+        .brand-logo { font-size: 54px; line-height: 1; color: #fff; }
+
+        .brand-name {
+            font-size: 34px;
+            font-weight: 700;
+            letter-spacing: -0.8px;
+            line-height: 1.05;
+        }
+        .brand-name span { color: #9fd0ff; font-weight: 600; }
+
+        .brand-sub { font-size: 14.5px; color: #dbeafe; margin-top: 2px; }
+
+        .brand-heading {
+            margin: 44px 0 0;
+            font-size: clamp(32px, 3.3vw, 44px);
+            font-weight: 800;
+            line-height: 1.18;
+            letter-spacing: -1.2px;
+        }
+        .brand-heading .hl { color: #4da3ff; }
+
+        .brand-description {
+            margin-top: 22px;
+            color: #e3eeff;
+            font-size: 15.5px;
+            line-height: 1.7;
+        }
+
+        .brand-features { margin-top: 30px; }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .feature-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 10px;
+            background: #1f6df0;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .feature-title { font-size: 15px; font-weight: 600; line-height: 1.3; }
+        .feature-desc { font-size: 12.5px; color: #cfe2ff; margin-top: 2px; }
+
+        .brand-tagline {
+            position: relative;
+            z-index: 2;
+            margin-top: 34px;
+            font-family: Caveat, "Segoe Script", cursive;
+            font-size: 31px;
+            font-weight: 500;
+            line-height: 1.05;
+            color: #6db3ff;
+            transform: rotate(-5deg);
+            transform-origin: left center;
+            display: inline-block;
+        }
+        .brand-tagline svg { display: block; margin-top: 2px; }
+
+        .illustration {
+            position: absolute;
+            z-index: 1;
+            right: -20px;
+            bottom: 18px;
+            width: min(62%, 470px);
+            height: auto;
+            pointer-events: none;
+        }
+
+        /* ===== Panel kanan ===== */
+        .form-panel {
+            position: relative;
+            height: 100%;
+            min-height: 700px;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+        }
+
+        .top-tagline {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 14px;
+            padding: 30px 42px 0;
+            font-size: 13px;
+            font-style: italic;
+            color: var(--muted);
+        }
+        .top-tagline .line {
+            width: 40px;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(11,99,229,.05), var(--accent));
+            border-radius: 2px;
+        }
+        .top-tagline b { font-weight: 500; color: var(--primary); }
+
+        .form-body {
+            flex: 1;
+            padding: 36px clamp(28px, 4.6vw, 64px) 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-title {
+            margin: 0 0 14px;
+            font-size: 34px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: var(--navy);
+        }
+
+        .form-description {
+            margin-bottom: 34px;
+            color: var(--muted);
+            font-size: 16px;
+            line-height: 1.65;
+        }
+
+        .form-label {
+            margin-bottom: 9px;
+            color: var(--navy);
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .input-group {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f8fbff;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .input-group:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(11, 99, 229, 0.1);
+            background: #fff;
+        }
+
+        .input-group-text {
+            padding-left: 16px;
+            padding-right: 14px;
+            border: none;
+            border-right: 1px solid var(--border);
+            border-radius: 0;
+            background: #f4f8fe;
+            color: #5b6b8c;
+            font-size: 17px;
+        }
+        .input-group:focus-within .input-group-text { color: var(--primary); }
+
+        .form-control {
+            min-height: 50px;
+            padding-left: 12px;
+            border: none;
+            background: transparent;
+            box-shadow: none !important;
+            color: var(--text);
+            font-size: 15px;
+        }
+        .form-control::placeholder { color: #9aa8c2; }
+
+        .password-toggle {
+            padding: 0 16px;
+            border: none;
+            background: transparent;
+            color: #5b6b8c;
+            font-size: 18px;
+        }
+        .password-toggle:hover { color: var(--primary); }
+
+        .form-check-input {
+            width: 1.15em;
+            height: 1.15em;
+            margin-top: .2em;
+            border-color: #b9c8e3;
+            cursor: pointer;
+        }
+        .form-check-input:checked {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        .form-check-label {
+            margin-left: 4px;
+            color: var(--navy);
+            font-size: 14.5px;
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            color: var(--primary);
+            font-size: 14.5px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .forgot-link:hover { color: var(--primary-dark); text-decoration: underline; }
+
+        .btn-login {
+            min-height: 52px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(180deg, #1470f0, #0b5ce0);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 8px 18px rgba(11, 99, 229, 0.25);
+            transition: transform .2s, box-shadow .2s;
+        }
+        .btn-login:hover {
+            background: linear-gradient(180deg, #0f63dc, #084fbd);
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(11, 99, 229, 0.32);
+        }
+        .btn-login i { margin-right: 10px; font-size: 18px; vertical-align: -2px; }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 26px 0 22px;
+            color: #7a8aa8;
+            font-size: 13px;
+        }
+        .divider::before, .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .btn-google {
+            min-height: 52px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--navy);
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: background .2s, border-color .2s;
+        }
+        .btn-google:hover { background: #f6f9ff; border-color: #bcd0f0; color: var(--navy); }
+
+        .security-box {
+            margin: 0 0 4px;
+            padding: 22px clamp(28px, 4.6vw, 64px);
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            background: #f5f8fe;
+        }
+        .security-box .shield { font-size: 34px; color: var(--primary); line-height: 1; }
+        .security-box .t1 { font-size: 14px; font-weight: 500; color: var(--navy); }
+        .security-box .t2 { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+        @media (max-width: 991.98px) {
+            .login-wrapper { padding: 16px 12px; align-items: flex-start; }
+            .login-card { max-width: 520px; border-radius: 16px; }
+            .brand-panel { min-height: auto; padding: 30px 28px; }
+            .brand-heading { margin-top: 28px; font-size: 30px; }
+            .brand-features, .brand-tagline, .illustration { display: none; }
+            .form-panel { min-height: auto; }
+            .top-tagline { padding: 22px 24px 0; }
+            .form-body { padding: 26px 24px 22px; }
+            .form-title { font-size: 28px; }
+            .security-box { padding: 18px 24px; }
+        }
+    </style>
+</head>
+
+<body>
+<main class="login-wrapper">
+    <div class="login-card">
+        <div class="row g-0">
+
+            <!-- ===== Panel branding ===== -->
+            <section class="col-lg-7">
+                <div class="brand-panel">
+                    <div class="brand-content">
+                        <div class="brand-top">
+                            <i class="bi bi-box brand-logo"></i>
+                            <div>
+                                <div class="brand-name">Stock<span>Wise</span></div>
+                                <div class="brand-sub">Inventory Management System</div>
+                            </div>
+                        </div>
+
+                        <h1 class="brand-heading">
+                            Kelola Stok dengan<br>
+                            <span class="hl">Lebih Cerdas</span>
+                        </h1>
+
+                        <p class="brand-description">
+                            Sistem Inventory Management modern untuk membantu Anda
+                            memantau, mengelola, dan mengoptimalkan persediaan barang
+                            secara real-time, lebih efisien dan akurat.
+                        </p>
+
+                        <div class="brand-features">
+                            <div class="feature-item">
+                                <span class="feature-icon"><i class="bi bi-bar-chart-fill"></i></span>
+                                <div>
+                                    <div class="feature-title">Data Real-time</div>
+                                    <div class="feature-desc">Pantau stok kapan saja dan di mana saja.</div>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon"><i class="bi bi-shield-check"></i></span>
+                                <div>
+                                    <div class="feature-title">Akurat &amp; Terpercaya</div>
+                                    <div class="feature-desc">Minimalkan kesalahan dan kehilangan stok.</div>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon"><i class="bi bi-lightning-charge"></i></span>
+                                <div>
+                                    <div class="feature-title">Proses Lebih Efisien</div>
+                                    <div class="feature-desc">Tingkatkan produktivitas operasional.</div>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon"><i class="bi bi-diagram-3"></i></span>
+                                <div>
+                                    <div class="feature-title">Terintegrasi</div>
+                                    <div class="feature-desc">Mudah dihubungkan dengan sistem lain.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="brand-tagline">
+                        Stok terkontrol,<br>bisnis semakin maju!
+                        <svg width="190" height="14" viewBox="0 0 190 14" fill="none">
+                            <path d="M2 11 C 50 3, 120 3, 188 2" stroke="#e6f0ff" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+
+                    <!-- Ilustrasi gudang isometrik -->
+                    <svg class="illustration" viewBox="0 0 470 520" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <defs>
+                            <symbol id="box" viewBox="0 0 60 68">
+                                <polygon points="30,0 60,17 30,34 0,17" fill="#f1c99c"/>
+                                <polygon points="0,17 30,34 30,68 0,51" fill="#c98f5e"/>
+                                <polygon points="30,34 60,17 60,51 30,68" fill="#dba878"/>
+                                <polygon points="22,4 38,13 8,30 -8,21" fill="#e4b680" opacity=".0"/>
+                                <polygon points="24,3 36,10 22,18 10,11" fill="#e9bf91" opacity=".9"/>
+                            </symbol>
+                            <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0" stop-color="#2f7df5"/>
+                                <stop offset="1" stop-color="#1650c9"/>
+                            </linearGradient>
+                        </defs>
+
+                        <!-- Lantai -->
+                        <polygon points="235,250 455,375 235,500 15,375" fill="#1a54d0" opacity=".55" stroke="#5aa0ff" stroke-opacity=".5"/>
+                        <polygon points="235,270 420,375 235,480 50,375" fill="#1d5bdc" opacity=".6"/>
+
+                        <!-- Dinding belakang -->
+                        <polygon points="150,200 300,115 450,200 450,230 300,145 150,230" fill="#1d58d8" opacity=".55"/>
+
+                        <!-- Rak kiri -->
+                        <g transform="translate(40,215) matrix(1,0.5,0,1,0,0)">
+                            <rect x="0" y="0" width="140" height="200" fill="#1a50c8" opacity=".5" stroke="#6eb0ff" stroke-width="2"/>
+                            <line x1="0" y1="66" x2="140" y2="66" stroke="#6eb0ff" stroke-width="3"/>
+                            <line x1="0" y1="132" x2="140" y2="132" stroke="#6eb0ff" stroke-width="3"/>
+                            <line x1="70" y1="0" x2="70" y2="200" stroke="#6eb0ff" stroke-width="2" opacity=".6"/>
+                        </g>
+                        <use href="#box" x="68" y="262" width="42" height="48"/>
+                        <use href="#box" x="112" y="256" width="40" height="46" opacity=".75"/>
+                        <use href="#box" x="82" y="318" width="40" height="46"/>
+                        <use href="#box" x="122" y="312" width="38" height="44" opacity=".75"/>
+                        <use href="#box" x="68" y="372" width="48" height="54"/>
+
+                        <!-- Monitor besar -->
+                        <g transform="translate(205,170) matrix(1,-0.5,0,1,0,0)">
+                            <rect x="0" y="0" width="215" height="215" rx="10" fill="url(#screen)" stroke="#8cc2ff" stroke-width="3"/>
+                            <rect x="12" y="12" width="191" height="191" rx="6" fill="#1544b3"/>
+                            <rect x="22" y="24" width="72" height="80" rx="5" fill="#4a96fb"/>
+                            <path d="M58 44 L78 55 L78 78 L58 89 L38 78 L38 55 Z" fill="none" stroke="#fff" stroke-width="3"/>
+                            <path d="M38 55 L58 66 L78 55 M58 66 L58 89" fill="none" stroke="#fff" stroke-width="3"/>
+                            <rect x="108" y="26" width="86" height="10" rx="3" fill="#6eb0ff" opacity=".6"/>
+                            <rect x="108" y="76" width="10" height="28" fill="#79b8ff"/>
+                            <rect x="124" y="60" width="10" height="44" fill="#79b8ff"/>
+                            <rect x="140" y="68" width="10" height="36" fill="#79b8ff"/>
+                            <rect x="156" y="46" width="10" height="58" fill="#79b8ff"/>
+                            <rect x="172" y="56" width="10" height="48" fill="#79b8ff"/>
+                            <rect x="22" y="120" width="172" height="8" rx="3" fill="#6eb0ff" opacity=".55"/>
+                            <rect x="22" y="140" width="172" height="8" rx="3" fill="#6eb0ff" opacity=".4"/>
+                            <rect x="22" y="160" width="172" height="8" rx="3" fill="#6eb0ff" opacity=".4"/>
+                            <rect x="22" y="180" width="120" height="8" rx="3" fill="#6eb0ff" opacity=".3"/>
+                        </g>
+
+                        <!-- Panel dokumen kecil -->
+                        <g transform="translate(150,270) matrix(1,0.5,0,1,0,0)">
+                            <rect x="0" y="0" width="70" height="95" rx="5" fill="#e8f1ff" stroke="#9cc6ff" stroke-width="2"/>
+                            <rect x="10" y="12" width="26" height="8" rx="2" fill="#2f7df5"/>
+                            <rect x="10" y="30" width="50" height="5" rx="2" fill="#9cc6ff"/>
+                            <rect x="10" y="44" width="50" height="5" rx="2" fill="#9cc6ff"/>
+                            <rect x="10" y="58" width="40" height="5" rx="2" fill="#9cc6ff"/>
+                        </g>
+
+                        <!-- Kotak di atas monitor -->
+                        <use href="#box" x="262" y="150" width="40" height="46"/>
+                        <use href="#box" x="296" y="160" width="38" height="44"/>
+                        <use href="#box" x="352" y="188" width="36" height="42"/>
+
+                        <!-- Palet + kotak kanan -->
+                        <polygon points="330,420 395,385 440,410 375,445" fill="#1b4fc4"/>
+                        <use href="#box" x="352" y="334" width="62" height="70"/>
+                        <use href="#box" x="372" y="360" width="50" height="56"/>
+
+                        <!-- Forklift -->
+                        <g>
+                            <polygon points="150,395 210,360 270,395 210,430" fill="#2a74f0"/>
+                            <polygon points="150,395 210,430 210,468 150,433" fill="#1c55c6"/>
+                            <polygon points="210,430 270,395 270,433 210,468" fill="#2464dc"/>
+                            <polygon points="170,372 205,352 228,365 193,385" fill="#4d9bff"/>
+                            <polygon points="170,372 193,385 193,402 170,389" fill="#1b4fc4"/>
+                            <rect x="236" y="320" width="8" height="110" fill="#0f3ba0" transform="skewY(-26) translate(0,150)"/>
+                            <polygon points="236,402 300,438 292,446 228,410" fill="#0f3ba0"/>
+                            <circle cx="170" cy="438" r="14" fill="#0a2a78"/>
+                            <circle cx="170" cy="438" r="6" fill="#4d9bff"/>
+                            <circle cx="236" cy="470" r="14" fill="#0a2a78"/>
+                            <circle cx="236" cy="470" r="6" fill="#4d9bff"/>
+                        </g>
+                        <use href="#box" x="258" y="400" width="62" height="70"/>
+                    </svg>
+
+                </div>
+            </section>
+            
+            <!-- ===== Form login ===== -->
+            <section class="col-lg-5">
+                <div class="form-panel">
+                    <div class="top-tagline">
+                        <span class="line"></span>
+                        <span>Solusi Inventory untuk <b>Masa Depan</b></span>
+                    </div>
+                    
+                    <div class="form-body">
+                        <h2 class="form-title">Masuk ke Akun Anda</h2>
+                        <p class="form-description">
+                            Untuk melanjutkan, silakan login menggunakan
+                            email dan password yang sudah terdaftar.
+                        </p>
+                        
+                        <form id="loginForm">
+                            <div class="mb-4">
+                                <label for="email" class="form-label">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" class="form-control" id="email" name="email"
+                                           placeholder="nama@perusahaan.com" autocomplete="username" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                    <input type="password" class="form-control" id="password" name="password"
+                                           placeholder="Masukkan password" autocomplete="current-password" required>
+                                    <button type="button" class="password-toggle" id="togglePassword"
+                                            aria-label="Tampilkan password">
+                                        <i class="bi bi-eye" id="eyeIcon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="remember" name="remember" checked>
+                                    <label class="form-check-label" for="remember">Ingat saya</label>
+                                </div>
+                                <a href="#" class="forgot-link">Lupa password?</a>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-login w-100">
+                                <i class="bi bi-box-arrow-in-right"></i>Masuk
+                            </button>
+                            
+                            <div id="loginMessage" class="alert alert-danger mt-3 d-none" role="alert"></div>
+                        </form>
+                        
+                        <div class="text-center mt-3">
+    <span class="text-muted">Belum punya akun?</span>
+    <a href="register.html" class="text-primary text-decoration-none fw-semibold">
+        Registrasi sekarang
+    </a>
+</div>
+                    </div>
+                    
+                    <div class="security-box">
+                        <i class="bi bi-shield-check shield"></i>
+                        <div>
+                            <div class="t1">Koneksi aman dan data Anda terlindungi</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        
+        </div>
+    </div>
+</main>
+
+<script>
+    // Tampilkan atau sembunyikan password
+    const togglePassword = document.getElementById("togglePassword");
+    const passwordInput = document.getElementById("password");
+    const eyeIcon = document.getElementById("eyeIcon");
+    
+    togglePassword.addEventListener("click", function () {
+        const isPassword = passwordInput.type === "password";
+        passwordInput.type = isPassword ? "text" : "password";
+        eyeIcon.classList.toggle("bi-eye", !isPassword);
+        eyeIcon.classList.toggle("bi-eye-slash", isPassword);
+        togglePassword.setAttribute(
+            "aria-label",
+            isPassword ? "Sembunyikan password" : "Tampilkan password"
+        );
+    });
+
+    
+const $ = (id) => document.getElementById(id);
+const API_URL = "http://localhost:8080";
+
+const ROLE_REDIRECTS = {
+  admin: "/client/admin/dashboard.html",
+  user: "/client/user/dashboard.html",
+  teknisi: "/client/teknisi/dashboard.html",
+};
+
+function showMessage(text, type = "danger") {
+  const box = $("loginMessage");
+  box.className = `alert alert-${type} mt-3 text-break`;
+  box.textContent = text;
+}
+
+function status(message, error = false) {
+  showMessage(message, error ? "danger" : "info");
+}
+
+async function request(path, body) {
+  let response;
+  
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      // Izinkan browser menerima cookie dari backend
+      credentials: "include",
+      body: JSON.stringify(body),
+    });
+  } catch (error) {
+    throw new Error(
+      "Tidak dapat terhubung ke server. Periksa koneksi dan alamat API."
+    );
+  }
+  
+  let result = {};
+  try {
+    result = await response.json();
+  } catch {
+    // Respons mungkin bukan JSON
+  }
+  
+  if (!response.ok) {
+    throw new Error(result.error || result.message || `HTTP ${response.status}`);
+  }
+  
+  return result;
+}
+
+async function run(button, action) {
+  button.disabled = true;
+  
+  try {
+    status("Memproses...");
+    await action();
+  } catch (error) {
+    status(error.message || "Terjadi kesalahan.", true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+$("loginForm").onsubmit = (event) => {
+  event.preventDefault();
+
+  const button = event.submitter || $("loginForm").querySelector('[type="submit"]');
+  
+  run(button, async () => {
+    const form = new FormData(event.target);
+    
+    const result = await request("/api/auth/login", {
+      email: form.get("email"),
+      password: form.get("password"),
+    });
+    
+    // Login berhasil jika server memberikan respons sukses.
+    // Token disimpan oleh browser melalui cookie HttpOnly.
+    status("Login berhasil. Memeriksa akun...");
+
+    // Periksa identitas dan role dari backend, bukan cookie buatan JavaScript.
+    const meResponse = await fetch(`${API_URL}/api/me`, {
+      method: "GET",
+      credentials: "include",
+    });
+    
+    let meResult = {};
+    try {
+      meResult = await meResponse.json();
+    } catch {
+      // Respons bukan JSON
+    }
+
+    if (!meResponse.ok) {
+      throw new Error(
+        meResult.error || "Login berhasil, tetapi autentikasi pengguna gagal."
+      );
+    }
+
+    // Menyesuaikan jika endpoint /api/me mengembalikan {data: {...}}
+    const user = meResult.data || meResult.user || {};
+    const role = String(user.role || "").trim().toLowerCase();
+    
+    if (!Object.prototype.hasOwnProperty.call(ROLE_REDIRECTS, role)) {
+      throw new Error("Role pengguna tidak dikenali.");
+    }
+    
+    event.target.reset();
+
+    // Backend menentukan halaman berdasarkan role dari database.
+    window.location.href = ROLE_REDIRECTS[role];
+  });
+};
+
+$("googleLogin").addEventListener("click", () => {
+  showMessage("Tombol Google siap dihubungkan ke OAuth.", "info");
+});
+
+//cek sudah login belum
+(async function checkExistingLogin() {
+    const API_URL = "http://localhost:8080";
+
+    try {
+        const response = await fetch(`${API_URL}/api/me`, {
+            method: "GET",
+            credentials: "include"
+        });
+
+        if (!response.ok) {
+            // Belum login atau sesi sudah kedaluwarsa.
+            return;
+        }
+
+        const result = await response.json();
+        const user = result.data || result.user || {};
+        const role = String(user.role || "").trim().toLowerCase();
+
+        const ROLE_REDIRECTS = {
+            admin: "/client/admin/dashboard.html",
+            user: "/client/user/dashboard.html",
+            teknisi: "/client/teknisi/dashboard.html"
+        };
+
+        const destination = ROLE_REDIRECTS[role];
+
+        if (destination) {
+            // Sudah login, langsung arahkan sesuai role.
+            window.location.replace(destination);
+        }
+    } catch (error) {
+        console.error("Gagal memeriksa sesi login:", error);
+    }
+})();
+
+</script>
+</body>
+</html>
