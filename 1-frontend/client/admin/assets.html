@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -372,10 +372,10 @@
 
                     <!-- Tabel aset -->
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle">
+                        <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>No.</th>
+                                    <th style="width: 50px;">No.</th>
                                     <th>Kode Aset</th>
                                     <th>Nama Aset</th>
                                     <th>Kategori</th>
@@ -384,12 +384,14 @@
                                     <th>Status</th>
                                     <th>Jumlah</th>
                                     <th>Terakhir Diperbarui</th>
+                                    <th style="width: 150px;" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
 
                             <tbody id="assetTableBody">
                                 <tr>
-                                    <td colspan="9" class="text-center py-4">
+                                    <td colspan="10" class="text-center py-4">
+                                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
                                         Memuat data aset...
                                     </td>
                                 </tr>
@@ -417,7 +419,7 @@
      aria-labelledby="addAssetModalLabel" aria-hidden="true">
 
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow">
 
             <div class="modal-header">
                 <div>
@@ -432,7 +434,7 @@
             </div>
 
             <form id="addAssetForm">
-                <div class="modal-body">
+                <div class="modal-body p-4">
 
                     <div id="addAssetAlert"
                          class="alert d-none"
@@ -508,7 +510,7 @@
                                 Jumlah <span class="text-danger">*</span>
                             </label>
                             <input type="number" id="assetQty" name="qty_in"
-                                   class="form-control" min="1"
+                                   class="form-control" min="0"
                                    step="1" value="1" required>
                         </div>
 
@@ -525,7 +527,7 @@
                     </div>
                 </div>
 
-                <div class="modal-footer">
+                <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary"
                             data-bs-dismiss="modal">
                         Batal
@@ -546,26 +548,240 @@
 
 <!--Batas Modal Tambah-->
 
+<!-- Modal Edit Aset -->
+<div class="modal fade" id="editAssetModal" tabindex="-1"
+     aria-labelledby="editAssetModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow">
+
+            <div class="modal-header bg-primary text-white">
+                <div>
+                    <h5 class="modal-title fw-bold" id="editAssetModalLabel">
+                        <i class="bi bi-pencil-square me-2"></i>Edit Aset
+                    </h5>
+                    <small class="text-white-50">Perbarui informasi data aset</small>
+                </div>
+                <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+
+            <form id="editAssetForm">
+                <div class="modal-body p-4">
+                    <div id="editAssetAlert" class="alert d-none" role="alert"></div>
+
+                    <input type="hidden" id="editAssetId" name="asset_id">
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="editAssetCode" class="form-label fw-semibold">
+                                Kode Aset <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="editAssetCode"
+                                   name="code_asset" class="form-control"
+                                   placeholder="Contoh: AST-2026-003"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="editAssetName" class="form-label fw-semibold">
+                                Nama Aset <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="editAssetName"
+                                   name="nama_asset" class="form-control"
+                                   placeholder="Nama aset" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="editAssetCategory" class="form-label fw-semibold">
+                                Kategori <span class="text-danger">*</span>
+                            </label>
+                            <select id="editAssetCategory" name="category"
+                                    class="form-select" required>
+                                <option value="">Pilih kategori</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="editAssetLocation" class="form-label fw-semibold">
+                                Lokasi <span class="text-danger">*</span>
+                            </label>
+                            <select id="editAssetLocation" name="location"
+                                    class="form-select" required>
+                                <option value="">Pilih lokasi</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="editAssetCondition" class="form-label fw-semibold">
+                                Kondisi <span class="text-danger">*</span>
+                            </label>
+                            <select id="editAssetCondition" name="condition"
+                                    class="form-select" required>
+                                <option value="">Pilih kondisi</option>
+                                <option value="Baik">Baik</option>
+                                <option value="Rusak Ringan">Rusak Ringan</option>
+                                <option value="Rusak Berat">Rusak Berat</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="editAssetStatus" class="form-label fw-semibold">
+                                Status <span class="text-danger">*</span>
+                            </label>
+                            <select id="editAssetStatus" name="status"
+                                    class="form-select" required>
+                                <option value="true">Aktif</option>
+                                <option value="false">Tidak Aktif</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="editAssetQty" class="form-label fw-semibold">
+                                Jumlah (Qty In) <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" id="editAssetQty" name="qty_in"
+                                   class="form-control" min="0"
+                                   step="1" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="editAssetDescription" class="form-label fw-semibold">
+                                Deskripsi
+                            </label>
+                            <textarea id="editAssetDescription"
+                                      name="description"
+                                      class="form-control" rows="3"
+                                      placeholder="Keterangan spesifikasi atau catatan aset"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Batal
+                    </button>
+                    <button type="submit" id="updateAssetButton"
+                            class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- Batas Modal Edit -->
+
+<!-- Modal Detail Aset -->
+<div class="modal fade" id="detailAssetModal" tabindex="-1"
+     aria-labelledby="detailAssetModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow">
+
+            <div class="modal-header bg-light">
+                <div>
+                    <h5 class="modal-title fw-bold" id="detailAssetModalLabel">
+                        <i class="bi bi-info-circle text-primary me-2"></i>Detail Aset
+                    </h5>
+                    <small class="text-muted">Informasi lengkap data inventaris aset</small>
+                </div>
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded border">
+                            <div class="text-muted small mb-1">Kode Aset</div>
+                            <div class="fs-5 fw-bold text-primary font-monospace" id="detailAssetCode">-</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded border">
+                            <div class="text-muted small mb-1">Nama Aset</div>
+                            <div class="fs-5 fw-bold" id="detailAssetName">-</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded border">
+                            <div class="text-muted small mb-1">Kategori</div>
+                            <div class="fw-semibold text-dark" id="detailAssetCategory">-</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded border">
+                            <div class="text-muted small mb-1">Lokasi</div>
+                            <div class="fw-semibold text-dark" id="detailAssetLocation">-</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded border">
+                            <div class="text-muted small mb-1">Kondisi</div>
+                            <div id="detailAssetCondition">-</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded border">
+                            <div class="text-muted small mb-1">Status</div>
+                            <div id="detailAssetStatus">-</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded border">
+                            <div class="text-muted small mb-1">Jumlah</div>
+                            <div class="fs-5 fw-bold text-dark" id="detailAssetQty">-</div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="p-3 bg-light rounded border">
+                            <div class="text-muted small mb-1">Deskripsi</div>
+                            <div id="detailAssetDescription" class="text-secondary">-</div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="p-3 bg-light rounded border">
+                            <div class="text-muted small mb-1">Terakhir Diperbarui</div>
+                            <div id="detailAssetUpdatedAt" class="fw-semibold text-muted">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Tutup
+                </button>
+                <button type="button" id="btnDetailToEdit"
+                        class="btn btn-warning">
+                    <i class="bi bi-pencil-square me-1"></i>
+                    Ubah Aset Ini
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Batas Modal Detail -->
+
+
 <footer>
     &copy; 2026 Sistem Manajemen Inventaris Cerdas
 </footer>
     
     
     <!-- Library eksternal -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
    
-   <!-- JavaScript lokal, di bagian bawah body -->
-<script src="../js/layout.js"></script>
-<script src="ajax/asset.js"></script>
+    <!-- JavaScript lokal, di bagian bawah body -->
+    <script src="../js/layout.js"></script>
+    <script src="ajax/asset.js?v=2.2"></script>
 
 </body>
 </html>

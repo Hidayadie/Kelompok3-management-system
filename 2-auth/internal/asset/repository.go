@@ -127,7 +127,7 @@ func (r *Repository) Delete(
 		Model(&Asset{}).
 		Where("asset_id = ? AND status = ?", id, true).
 		Updates(map[string]interface{}{
-			"status":    true,
+			"status":    false,
 			"update_at": time.Now(),
 		})
 

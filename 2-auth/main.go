@@ -11,6 +11,7 @@ import (
 	"gin-auth/internal/asset"
 	"gin-auth/internal/auth"
 	"gin-auth/internal/category"
+	"gin-auth/internal/complaint"
 	"gin-auth/internal/dashboard"
 	"gin-auth/internal/database"
 	"gin-auth/internal/location"
@@ -81,7 +82,12 @@ func setupEngine(db *gorm.DB, secret []byte) *gin.Engine {
 	dashboardService := dashboard.NewService(dashboardRepo)
 	dashboardHandler := dashboard.NewHandler(dashboardService)
 
-	private.RegisterRoutes(r, handler.AuthReq(), categoryHandler, locationHandler, assetHandler, dashboardHandler)
+	//complaint
+	complaintRepo := complaint.NewRepository(db)
+	complaintService := complaint.NewService(complaintRepo)
+	complaintHandler := complaint.NewHandler(complaintService)
+
+	private.RegisterRoutes(r, handler.AuthReq(), categoryHandler, locationHandler, assetHandler, dashboardHandler, complaintHandler)
 
 	return r
 }
@@ -113,6 +119,7 @@ func run() error {
 		&location.Location{},
 		&category.Category{},
 		&asset.Asset{},
+		&complaint.Complaint{},
 	); err != nil {
 		return fmt.Errorf("migrasi tabel gagal: %w", err)
 	}
