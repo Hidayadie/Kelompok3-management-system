@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"gin-auth/internal/asset"
+	"gin-auth/internal/assetbroken"
+	"gin-auth/internal/assetlending"
 	"gin-auth/internal/auth"
 	"gin-auth/internal/category"
 	"gin-auth/internal/complaint"
@@ -87,7 +89,27 @@ func setupEngine(db *gorm.DB, secret []byte) *gin.Engine {
 	complaintService := complaint.NewService(complaintRepo)
 	complaintHandler := complaint.NewHandler(complaintService)
 
-	private.RegisterRoutes(r, handler.AuthReq(), categoryHandler, locationHandler, assetHandler, dashboardHandler, complaintHandler)
+	// asset-broken
+	assetBrokenRepo := assetbroken.NewRepository(db)
+	assetBrokenService := assetbroken.NewService(assetBrokenRepo, assetRepo)
+	assetBrokenHandler := assetbroken.NewHandler(assetBrokenService)
+
+	// asset-lending
+	assetLendingRepo := assetlending.NewRepository(db)
+	assetLendingService := assetlending.NewService(assetLendingRepo, assetRepo, repo)
+	assetLendingHandler := assetlending.NewHandler(assetLendingService)
+
+	private.RegisterRoutes(
+		r,
+		handler.AuthReq(),
+		categoryHandler,
+		locationHandler,
+		assetHandler,
+		dashboardHandler,
+		complaintHandler,
+		assetBrokenHandler,
+		assetLendingHandler,
+	)
 
 	return r
 }
@@ -120,6 +142,8 @@ func run() error {
 		&category.Category{},
 		&asset.Asset{},
 		&complaint.Complaint{},
+		&assetbroken.AssetRusak{},
+		&assetlending.LendingAsset{},
 	); err != nil {
 		return fmt.Errorf("migrasi tabel gagal: %w", err)
 	}

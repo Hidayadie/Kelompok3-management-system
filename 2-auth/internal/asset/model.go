@@ -20,12 +20,12 @@ type Asset struct {
 	LocationID uuid.UUID         `json:"location" gorm:"column:location;type:uuid;not null"`
 	Location   location.Location `json:"location_detail" gorm:"foreignKey:LocationID;references:ID"`
 
-	Condition   string    `json:"condition" gorm:"column:condition;type:kondisi"`
+	Condition   string    `json:"condition" gorm:"column:condition;type:varchar(50)"`
 	Status      bool      `json:"status" gorm:"column:status"`
 	Description string    `json:"description" gorm:"column:description"`
 	QtyIn       int       `json:"qty_in" gorm:"column:qty_in"`
 	UpdateAt    time.Time `json:"update_at" gorm:"column:update_at;autoUpdateTime"`
-	CreatedAt   bool      `json:"create_at" gorm:"column:update_at;autoUpdateTime"`
+	CreatedAt   time.Time `json:"create_at" gorm:"column:created_at;autoCreateTime"`
 }
 
 func (Asset) TableName() string {

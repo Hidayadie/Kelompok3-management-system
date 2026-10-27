@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kelola Peminjaman Aset - Inventaris Cerdas</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f4f7fb;
+            color: #1e293b;
+            font-family: Arial, sans-serif;
+        }
+
+        /* SIDEBAR MENU VERTIKAL */
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: 250px;
+            height: 100vh;
+            padding: 24px 15px;
+            background: #102a56;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 10px 28px;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+        }
+
+        .brand-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #2563eb;
+            font-size: 23px;
+        }
+
+        .menu-title {
+            padding: 14px 12px 10px;
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 5px;
+            width: 100%;
+        }
+
+        .sidebar .nav-link {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            width: 100%;
+            min-height: 45px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            color: #cbd5e1;
+            text-decoration: none;
+            white-space: nowrap;
+            font-size: 13px;
+        }
+
+        .sidebar .nav-link i {
+            width: 21px;
+            flex-shrink: 0;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: #2563eb;
+            color: white;
+        }
+        
+        .sidebar .logout {
+            margin-top: 20px;
+            border-top: 1px solid #334969;
+            border-radius: 0;
+            padding-top: 20px;
+        }
+
+        /* KONTEN UTAMA */
+        .main-content {
+            margin-left: 250px;
+            min-height: 100vh;
+            padding: 28px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .page-title {
+            margin-bottom: 7px;
+            font-size: 25px;
+            font-weight: bold;
+        }
+        
+        .muted {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .content-card {
+            height: 100%;
+            padding: 22px;
+            background: white;
+            border: 1px solid #e9eef5;
+            border-radius: 13px;
+            box-shadow: 0 3px 12px rgba(15, 23, 42, .03);
+        }
+
+        .section-title {
+            margin-bottom: 18px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .table thead th {
+            padding: 14px;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .table tbody td {
+            padding: 15px 14px;
+            font-size: 12px;
+            vertical-align: middle;
+        }
+
+        footer {
+            padding: 24px 0 5px;
+            color: #64748b;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 72px;
+                padding: 20px 8px;
+            }
+
+            .main-content {
+                margin-left: 72px;
+                padding: 16px 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    
+    <!-- Sidebar diambil dari components/sidebar.html -->
+    <div id="sidebar-container"></div>
+    
+    <main class="main-content">
+        
+        <!-- Header -->
+        <header class="topbar">
+            <div>
+                <h1 class="page-title">Peminjaman Aset</h1>
+                <div class="muted">Kelola Transaksi Peminjaman & Pengembalian Aset</div>
+            </div>
+        </header>
+
+        <!-- KONTEN DATA PEMINJAMAN -->
+        <section class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="content-card">
+
+                    <!-- Judul dan tombol aksi -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                        <div>
+                            <h2 class="section-title mb-1">Daftar Peminjaman Aset</h2>
+                            <div class="muted">Riwayat sirkulasi aset yang dipinjam oleh pengguna</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button
+                                type="button"
+                                id="refreshLendings"
+                                class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-arrow-clockwise me-1"></i>
+                                Refresh
+                            </button>
+
+                            <button
+                                type="button"
+                                id="addLendingButton"
+                                class="btn btn-primary btn-sm">
+                                <i class="bi bi-box-arrow-right me-1"></i>
+                                Catat Peminjaman
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter data -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="lendingFilter" class="form-label fw-semibold">
+                                Filter Peminjaman
+                            </label>
+                            <select id="lendingFilter" class="form-select" style="width: 100%">
+                                <option value="">Semua Peminjaman</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="statusLendingFilter" class="form-label fw-semibold">
+                                Status Peminjaman
+                            </label>
+                            <select id="statusLendingFilter" class="form-select">
+                                <option value="">Semua Status</option>
+                                <option value="dipinjam">Sedang Dipinjam</option>
+                                <option value="dikembalikan">Sudah Dikembalikan</option>
+                                <option value="terlambat">Terlambat</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Alert pesan -->
+                    <div id="lendingAlert" class="alert d-none" role="alert"></div>
+
+                    <!-- Tabel Peminjaman -->
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 50px;">No.</th>
+                                    <th>Peminjam (User)</th>
+                                    <th>Aset Dipinjam</th>
+                                    <th class="text-center">Jumlah</th>
+                                    <th>Tanggal Pinjam</th>
+                                    <th>Tanggal Kembali</th>
+                                    <th>Status</th>
+                                    <th style="width: 160px;" class="text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lendingTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">
+                                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                        Memuat data peminjaman...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Counter -->
+                    <div id="lendingCount" class="text-muted small mt-2">
+                        Total peminjaman: 0
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- MODAL TAMBAH PEMINJAMAN -->
+        <div class="modal fade" id="addLendingModal" tabindex="-1" aria-labelledby="addLendingModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title fw-bold" id="addLendingModalLabel">
+                                <i class="bi bi-box-arrow-right text-primary me-2"></i>Catat Peminjaman Aset Baru
+                            </h5>
+                            <small class="text-muted">Kuantitas aset otomatis berkurang saat dipinjam</small>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+
+                    <form id="addLendingForm">
+                        <div class="modal-body p-4">
+                            <div id="addLendingAlert" class="alert d-none" role="alert"></div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="lendingUserId" class="form-label">
+                                        ID User Peminjam <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" id="lendingUserId" name="user_id" class="form-control"
+                                           placeholder="Masukkan User ID (contoh: 1)" min="1" required>
+                                    <div class="form-text">ID akun pengguna yang meminjam aset.</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="lendingAssetId" class="form-label">
+                                        Pilih Aset <span class="text-danger">*</span>
+                                    </label>
+                                    <select id="lendingAssetId" name="asset_id" class="form-select" required>
+                                        <option value="">Memuat aset...</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="lendingQty" class="form-label">
+                                        Jumlah Pinjam <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" id="lendingQty" name="qty_lending" class="form-control"
+                                           min="1" value="1" required>
+                                    <div class="form-text" id="lendingStockHelp">Pilih aset untuk melihat sisa stok.</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="lendingDate" class="form-label">
+                                        Tanggal & Waktu Pinjam
+                                    </label>
+                                    <input type="datetime-local" id="lendingDate" name="lending_date" class="form-control">
+                                    <div class="form-text">Biarkan kosong untuk menggunakan waktu saat ini.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" id="saveLendingButton" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> Simpan Peminjaman
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL UBAH PEMINJAMAN -->
+        <div class="modal fade" id="editLendingModal" tabindex="-1" aria-labelledby="editLendingModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title fw-bold" id="editLendingModalLabel">
+                                <i class="bi bi-pencil-square text-warning me-2"></i>Ubah Transaksi Peminjaman
+                            </h5>
+                            <small class="text-muted">Perubahan kuantitas akan otomatis menyesuaikan stok aset</small>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+
+                    <form id="editLendingForm">
+                        <div class="modal-body p-4">
+                            <input type="hidden" id="editLendingId">
+                            <div id="editLendingAlert" class="alert d-none" role="alert"></div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="editLendingUserId" class="form-label">ID User Peminjam <span class="text-danger">*</span></label>
+                                    <input type="number" id="editLendingUserId" name="user_id" class="form-control" min="1" required>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="editLendingAssetId" class="form-label">Aset Terkait <span class="text-danger">*</span></label>
+                                    <select id="editLendingAssetId" name="asset_id" class="form-select" required>
+                                        <option value="">Memuat aset...</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="editLendingQty" class="form-label">Jumlah Pinjam <span class="text-danger">*</span></label>
+                                    <input type="number" id="editLendingQty" name="qty_lending" class="form-control" min="1" required>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="editLendingStatus" class="form-label">Status Peminjaman <span class="text-danger">*</span></label>
+                                    <select id="editLendingStatus" name="lending_status" class="form-select" required>
+                                        <option value="dipinjam">Sedang Dipinjam</option>
+                                        <option value="dikembalikan">Sudah Dikembalikan</option>
+                                        <option value="terlambat">Terlambat</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="editLendingDate" class="form-label">Tanggal Pinjam <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" id="editLendingDate" name="lending_date" class="form-control" required>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="editLendingReturnDate" class="form-label">Tanggal Pengembalian</label>
+                                    <input type="datetime-local" id="editLendingReturnDate" name="lending_return" class="form-control">
+                                    <div class="form-text">Isi jika aset sudah dikembalikan.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" id="updateLendingButton" class="btn btn-warning">
+                                <i class="bi bi-check-lg me-1"></i> Perbarui Peminjaman
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL DETAIL PEMINJAMAN -->
+        <div class="modal fade" id="detailLendingModal" tabindex="-1" aria-labelledby="detailLendingModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold" id="detailLendingModalLabel">
+                            <i class="bi bi-info-circle text-info me-2"></i>Detail Peminjaman Aset
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="p-3 bg-light rounded border">
+                                    <div class="text-muted small mb-1">Peminjam</div>
+                                    <div class="fw-bold fs-6 text-dark" id="detailUserName">-</div>
+                                    <small class="text-muted" id="detailUserEmail">-</small>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="p-3 bg-light rounded border">
+                                    <div class="text-muted small mb-1">Aset Dipinjam</div>
+                                    <div class="fw-bold fs-6 text-primary" id="detailAssetName">-</div>
+                                    <small class="text-muted" id="detailAssetCode">-</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 bg-light rounded border">
+                                    <div class="text-muted small mb-1">Jumlah Pinjam</div>
+                                    <div class="fs-5 fw-bold text-dark" id="detailQtyLending">-</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 bg-light rounded border">
+                                    <div class="text-muted small mb-1">Status Peminjaman</div>
+                                    <div id="detailStatusLending">-</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 bg-light rounded border">
+                                    <div class="text-muted small mb-1">Tanggal Pinjam</div>
+                                    <div class="fw-semibold text-dark small" id="detailLendingDate">-</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 bg-light rounded border">
+                                    <div class="text-muted small mb-1">Tanggal Pengembalian</div>
+                                    <div class="fw-semibold text-dark small" id="detailReturnDate">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                        <button type="button" id="btnDetailToEditLending" class="btn btn-warning">
+                            <i class="bi bi-pencil-square me-1"></i> Ubah Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            &copy; 2026 Sistem Manajemen Inventaris Cerdas
+        </footer>
+
+    </main>
+
+    <!-- Library Eksternal -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Script Lokal -->
+    <script src="../js/layout.js"></script>
+    <script src="ajax/lending-asset.js"></script>
+
+</body>
+</html>
