@@ -48,20 +48,80 @@ func (r *Repository) Create(
 	return r.db.WithContext(ctx).Create(item).Error
 }
 
-// List mengambil seluruh aset aktif beserta kategori dan lokasi.
+// List mengambil seluruh aset aktif beserta kategori dan lokasi, dengan agregasi qty rusak dan dipinjam.
 func (r *Repository) List(
 	ctx context.Context,
-) ([]Asset, error) {
-	var items []Asset
+) ([]AssetWithQty, error) {
+	var assets []Asset
 
 	err := r.db.WithContext(ctx).
 		Preload("Category").
 		Preload("Location").
 		Where("status = ?", true).
 		Order("asset_id DESC").
-		Find(&items).Error
+		Find(&assets).Error
+	if err != nil {
+		return nil, err
+	}
 
-	return items, err
+	if len(assets) == 0 {
+		return []AssetWithQty{}, nil
+	}
+
+	assetIDs := make([]uint, len(assets))
+	for i, a := range assets {
+		assetIDs[i] = a.AssetID
+	}
+
+	type qtyResult struct {
+		AssetID uint `gorm:"column:asset_id"`
+		Total   int  `gorm:"column:total"`
+	}
+
+	// 1. Hitung qty_dipinjam dari lending_assets (hanya status dipinjam dan terlambat)
+	var lendingResults []qtyResult
+	err = r.db.WithContext(ctx).
+		Table("lending_assets").
+		Select("asset_id, COALESCE(SUM(qty_lending), 0) as total").
+		Where("asset_id IN ? AND lending_status IN ?", assetIDs, []string{"dipinjam", "terlambat"}).
+		Group("asset_id").
+		Scan(&lendingResults).Error
+	if err != nil {
+		return nil, err
+	}
+
+	lendingMap := make(map[uint]int, len(lendingResults))
+	for _, lr := range lendingResults {
+		lendingMap[lr.AssetID] = lr.Total
+	}
+
+	// 2. Hitung qty_rusak dari asset_rusak
+	var rusakResults []qtyResult
+	err = r.db.WithContext(ctx).
+		Table("asset_rusak").
+		Select("asset_id, COALESCE(SUM(qty_rusak), 0) as total").
+		Where("asset_id IN ?", assetIDs).
+		Group("asset_id").
+		Scan(&rusakResults).Error
+	if err != nil {
+		return nil, err
+	}
+
+	rusakMap := make(map[uint]int, len(rusakResults))
+	for _, rr := range rusakResults {
+		rusakMap[rr.AssetID] = rr.Total
+	}
+
+	items := make([]AssetWithQty, len(assets))
+	for i, a := range assets {
+		items[i] = AssetWithQty{
+			Asset:       a,
+			QtyRusak:    rusakMap[a.AssetID],
+			QtyDipinjam: lendingMap[a.AssetID],
+		}
+	}
+
+	return items, nil
 }
 
 // GetByID mengambil detail satu aset.

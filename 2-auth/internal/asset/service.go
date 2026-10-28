@@ -141,7 +141,7 @@ func (s *Service) Create(
 	return s.repo.GetByID(ctx, item.AssetID)
 }
 
-func (s *Service) List(ctx context.Context) ([]Asset, error) {
+func (s *Service) List(ctx context.Context) ([]AssetWithQty, error) {
 	return s.repo.List(ctx)
 }
 

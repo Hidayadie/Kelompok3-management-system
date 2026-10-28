@@ -28,6 +28,12 @@ type Asset struct {
 	CreatedAt   time.Time `json:"create_at" gorm:"column:created_at;autoCreateTime"`
 }
 
+type AssetWithQty struct {
+	Asset
+	QtyRusak    int `json:"qty_rusak"`
+	QtyDipinjam int `json:"qty_dipinjam"`
+}
+
 func (Asset) TableName() string {
 	return "assets"
 }
