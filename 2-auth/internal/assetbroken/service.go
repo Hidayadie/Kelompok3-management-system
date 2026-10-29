@@ -9,6 +9,7 @@ import (
 	"gin-auth/internal/asset"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 var (
@@ -37,6 +38,8 @@ type CreateAssetRusakInput struct {
 	QtyRusak    int    `json:"qty_rusak" binding:"required,gt=0"`
 	Status      string `json:"status" binding:"required"`
 	StatusRusak bool   `json:"status_rusak"`
+	IsRepaired  bool   `json:"isRepaired"`
+	Description string `json:"description"`
 }
 
 type UpdateAssetRusakInput struct {
@@ -45,6 +48,8 @@ type UpdateAssetRusakInput struct {
 	QtyRusak    int    `json:"qty_rusak" binding:"required,gt=0"`
 	Status      string `json:"status" binding:"required"`
 	StatusRusak bool   `json:"status_rusak"`
+	IsRepaired  bool   `json:"isRepaired"`
+	Description string `json:"description"`
 }
 
 func normalizeCreateInput(input *CreateAssetRusakInput) {
@@ -95,6 +100,8 @@ func (s *Service) Create(
 		QtyRusak:    input.QtyRusak,
 		Status:      input.Status,
 		StatusRusak: input.StatusRusak,
+		IsRepaired:  input.IsRepaired,
+		Description: strings.TrimSpace(input.Description),
 	}
 
 	// Gunakan transaksi agar pengurangan kuantitas aset dan penyimpanan pencatatan bersifat atomik
@@ -142,6 +149,7 @@ func (s *Service) GetByID(ctx context.Context, id uint) (*AssetRusak, error) {
 }
 
 // Update memperbarui data kerusakan aset dan menyesuaikan kuantitas aset bila qty berubah.
+
 func (s *Service) Update(
 	ctx context.Context,
 	id uint,
@@ -150,16 +158,18 @@ func (s *Service) Update(
 	if id == 0 {
 		return nil, ErrInvalidInput
 	}
+
 	normalizeUpdateInput(&input)
 
-	current, err := s.repo.GetByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	if current == nil {
-		return nil, ErrRecordNotFound
+	// Validasi seluruh input.
+	if input.CodeRusak == "" ||
+		input.AssetID == 0 ||
+		input.QtyRusak <= 0 ||
+		input.Status == "" {
+		return nil, ErrInvalidInput
 	}
 
+	// Periksa kode agar tidak digunakan record lain.
 	exists, err := s.repo.ExistsByCode(ctx, input.CodeRusak, id)
 	if err != nil {
 		return nil, err
@@ -168,42 +178,93 @@ func (s *Service) Update(
 		return nil, ErrDuplicateCode
 	}
 
-	targetAsset, err := s.assetRepo.GetByID(ctx, input.AssetID)
-	if err != nil {
-		return nil, err
-	}
-	if targetAsset == nil {
-		return nil, ErrAssetNotFound
-	}
-
-	// Selisih penambahan kuantitas rusak
-	delta := input.QtyRusak - current.QtyRusak
-
-	// Jika kuantitas rusak bertambah, pastikan stok aset yang tersedia masih cukup
-	if delta > 0 && targetAsset.QtyIn < delta {
-		return nil, fmt.Errorf("%w: sisa kuantitas aset tidak cukup untuk penambahan %d unit rusak", ErrInsufficientStock, delta)
-	}
-
-	updated := &AssetRusak{
-		CodeRusak:   input.CodeRusak,
-		AssetID:     input.AssetID,
-		QtyRusak:    input.QtyRusak,
-		Status:      input.Status,
-		StatusRusak: input.StatusRusak,
-	}
+	var updatedID uint
 
 	err = s.repo.GetDB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		// Jika kuantitas berubah, sesuaikan stok aset (jika delta > 0 kurangi stok, delta < 0 kembalikan stok)
-		if delta != 0 {
-			if err := s.assetRepo.AdjustQty(ctx, tx, input.AssetID, -delta); err != nil {
+		// Ambil data terbaru di dalam transaksi.
+		var current AssetRusak
+
+		err := tx.
+			Clauses(clause.Locking{Strength: "UPDATE"}).
+			First(&current, "rusak_id = ?", id).Error
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrRecordNotFound
+		}
+		if err != nil {
+			return err
+		}
+
+		// Periksa aset tujuan.
+		targetAsset, err := s.assetRepo.GetByID(ctx, input.AssetID)
+		if err != nil {
+			return err
+		}
+		if targetAsset == nil {
+			return ErrAssetNotFound
+		}
+
+		if current.AssetID == input.AssetID {
+			// Aset tetap sama: sesuaikan stok berdasarkan selisih.
+			delta := input.QtyRusak - current.QtyRusak
+
+			if delta > 0 && targetAsset.QtyIn < delta {
+				return fmt.Errorf(
+					"%w: stok tersedia %d unit, tambahan yang dibutuhkan %d unit",
+					ErrInsufficientStock,
+					targetAsset.QtyIn,
+					delta,
+				)
+			}
+
+			if delta != 0 {
+				if err := s.assetRepo.AdjustQty(
+					ctx, tx, input.AssetID, -delta,
+				); err != nil {
+					return err
+				}
+			}
+		} else {
+			// Aset berubah: kembalikan stok aset lama terlebih dahulu.
+			if err := s.assetRepo.AdjustQty(
+				ctx, tx, current.AssetID, current.QtyRusak,
+			); err != nil {
 				return err
 			}
+
+			// Periksa kembali stok aset baru di database.
+			// Pastikan AdjustQty menolak stok negatif secara atomik.
+			if targetAsset.QtyIn < input.QtyRusak {
+				return fmt.Errorf(
+					"%w: stok tersedia %d unit, dibutuhkan %d unit",
+					ErrInsufficientStock,
+					targetAsset.QtyIn,
+					input.QtyRusak,
+				)
+			}
+
+			if err := s.assetRepo.AdjustQty(
+				ctx, tx, input.AssetID, -input.QtyRusak,
+			); err != nil {
+				return err
+			}
+		}
+
+		updated := &AssetRusak{
+			CodeRusak:   input.CodeRusak,
+			AssetID:     input.AssetID,
+			QtyRusak:    input.QtyRusak,
+			Status:      input.Status,
+			StatusRusak: input.StatusRusak,
+			IsRepaired:  input.IsRepaired,
+			Description: strings.TrimSpace(input.Description),
 		}
 
 		if err := s.repo.Update(ctx, tx, id, updated); err != nil {
 			return err
 		}
 
+		updatedID = id
 		return nil
 	})
 
@@ -211,7 +272,7 @@ func (s *Service) Update(
 		return nil, err
 	}
 
-	return s.repo.GetByID(ctx, id)
+	return s.repo.GetByID(ctx, updatedID)
 }
 
 // Delete menghapus data aset rusak dan mengembalikan kuantitas aset yang sebelumnya tercatat rusak.

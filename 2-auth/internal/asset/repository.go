@@ -205,7 +205,6 @@ func (r *Repository) Delete(
 func (r *Repository) GetDB() *gorm.DB {
 	return r.db
 }
-
 // AdjustQty menambah atau mengurangi kuantitas aset secara atomik.
 func (r *Repository) AdjustQty(
 	ctx context.Context,

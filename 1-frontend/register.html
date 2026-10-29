@@ -208,46 +208,142 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+    "use strict";
+
+    const REGISTER_URL = "http://localhost:8080/api/auth/register";
+
     // Tampilkan/sembunyikan password
     document.querySelectorAll(".password-toggle").forEach(button => {
         button.addEventListener("click", function () {
             const input = document.getElementById(this.dataset.target);
             const icon = this.querySelector("i");
 
-            input.type = input.type === "password" ? "text" : "password";
+            input.type =
+                input.type === "password" ? "text" : "password";
+
             icon.classList.toggle("bi-eye");
             icon.classList.toggle("bi-eye-slash");
         });
     });
 
-    document.getElementById("registerForm").addEventListener("submit", async function (event) {
-        event.preventDefault();
+    // Registrasi akun
+    document.getElementById("registerForm").addEventListener(
+        "submit",
+        async function (event) {
+            event.preventDefault();
 
-        const name = document.getElementById("name").value.trim();
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
-        const confirmPassword = document.getElementById("confirmPassword").value;
+            const name = document.getElementById("name").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            const confirmPassword =
+                document.getElementById("confirmPassword").value;
+            const role = document.getElementById("role").value;
 
-        if (password.length < 8) {
-            Swal.fire("Validasi", "Password minimal 8 karakter.", "warning");
-            return;
+            const button = document.getElementById("registerButton");
+
+            // Validasi form
+            if (!name || !email || !password || !role) {
+                Swal.fire(
+                    "Validasi",
+                    "Semua field wajib diisi.",
+                    "warning"
+                );
+                return;
+            }
+
+            if (password.length < 8) {
+                Swal.fire(
+                    "Validasi",
+                    "Password minimal 8 karakter.",
+                    "warning"
+                );
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                Swal.fire(
+                    "Validasi",
+                    "Konfirmasi password tidak cocok.",
+                    "warning"
+                );
+                return;
+            }
+
+            // Simpan teks tombol semula
+            const originalButton = button.innerHTML;
+
+            button.disabled = true;
+            button.innerHTML = `
+                <span class="spinner-border spinner-border-sm me-2"
+                      role="status"></span>
+                Memproses Registrasi...
+            `;
+
+            try {
+                const response = await fetch(REGISTER_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        password: password,
+                        role: role
+                    })
+                });
+
+                // Baca respons JSON dari backend
+                const result = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.message ||
+                        result.error ||
+                        `Registrasi gagal (HTTP ${response.status}).`
+                    );
+                }
+
+                await Swal.fire({
+                    icon: "success",
+                    title: "Registrasi Berhasil!",
+                    text: result.message ||
+                        "Akun berhasil dibuat. Silakan login.",
+                    confirmButtonText: "Login",
+                    allowOutsideClick: false
+                });
+
+                // Arahkan ke halaman login
+                window.location.href = "login.html";
+
+            } catch (error) {
+                console.error("Error registrasi:", error);
+
+                let message = error.message ||
+                    "Terjadi kesalahan saat registrasi.";
+
+                if (error instanceof TypeError) {
+                    message =
+                        "Tidak dapat terhubung ke server. " +
+                        "Pastikan backend aktif dan konfigurasi CORS benar.";
+                }
+
+                Swal.fire({
+                    icon: "error",
+                    title: "Registrasi Gagal",
+                    text: message,
+                    confirmButtonText: "Mengerti"
+                });
+
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalButton;
+            }
         }
-
-        if (password !== confirmPassword) {
-            Swal.fire("Validasi", "Konfirmasi password tidak cocok.", "warning");
-            return;
-        }
-
-        /*
-         * Hubungkan ke endpoint registrasi backend Go di sini.
-         * Endpoint dan format JSON perlu disesuaikan dengan API kamu.
-         */
-        Swal.fire({
-            icon: "info",
-            title: "Form Registrasi Siap",
-            text: "Hubungkan form ini ke endpoint registrasi akun pada backend Go."
-        });
-    });
+    );
 </script>
+
 </body>
 </html>

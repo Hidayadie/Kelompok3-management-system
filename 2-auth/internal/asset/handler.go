@@ -2,6 +2,8 @@ package asset
 
 import (
 	"errors"
+	"fmt"
+	"gin-auth/internal/dashboard"
 	"log"
 	"net/http"
 	"strconv"
@@ -60,6 +62,7 @@ func parseAssetID(c *gin.Context) (uint, error) {
 }
 
 // POST /api/assets
+
 func (h *Handler) Create(c *gin.Context) {
 	var input AssetInput
 
@@ -74,6 +77,20 @@ func (h *Handler) Create(c *gin.Context) {
 	if err != nil {
 		h.handleError(c, err)
 		return
+	}
+
+	// Ambil nama aset dan deskripsi dari input.
+	activityDescription := fmt.Sprintf(
+		"Menambahkan aset %s. Deskripsi: %s",
+		input.NamaAsset,
+		input.Description,
+	)
+
+	if err := dashboard.AddActivity(
+		"asset_created",
+		activityDescription,
+	); err != nil {
+		log.Printf("Gagal mencatat aktivitas: %v", err)
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
@@ -115,6 +132,7 @@ func (h *Handler) GetByID(c *gin.Context) {
 }
 
 // PUT /api/assets/:id
+
 func (h *Handler) Update(c *gin.Context) {
 	id, err := parseAssetID(c)
 	if err != nil {
@@ -138,6 +156,20 @@ func (h *Handler) Update(c *gin.Context) {
 	if err != nil {
 		h.handleError(c, err)
 		return
+	}
+
+	// Catat aktivitas setelah aset berhasil diperbarui.
+	activityDescription := fmt.Sprintf(
+		"Memperbarui aset %s. Deskripsi: %s",
+		input.NamaAsset,
+		input.Description,
+	)
+
+	if err := dashboard.AddActivity(
+		"asset_updated",
+		activityDescription,
+	); err != nil {
+		log.Printf("Gagal mencatat aktivitas: %v", err)
 	}
 
 	c.JSON(http.StatusOK, gin.H{

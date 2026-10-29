@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kelola Kategori - Inventaris Cerdas</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+    
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+    
+    body {
+        margin: 0;
+        background: #f4f7fb;
+        color: #1e293b;
+        font-family: Arial, sans-serif;
+    }
+
+    /* SIDEBAR MENU VERTIKAL */
+    .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        width: 250px;
+        height: 100vh;
+        padding: 24px 15px;
+        background: #102a56;
+        overflow-y: auto;
+        z-index: 1000;
+    }
+
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 10px 28px;
+        color: white;
+        font-size: 17px;
+        font-weight: bold;
+    }
+
+    .brand-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: #2563eb;
+        font-size: 23px;
+    }
+
+    .menu-title {
+        padding: 14px 12px 10px;
+        color: #94a3b8;
+        font-size: 10px;
+        font-weight: bold;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+    }
+
+    .sidebar nav {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 5px;
+        width: 100%;
+    }
+
+    .sidebar .nav-link {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 12px;
+        width: 100%;
+        min-height: 45px;
+        padding: 12px 14px;
+        border-radius: 8px;
+        color: #cbd5e1;
+        text-decoration: none;
+        white-space: nowrap;
+        font-size: 13px;
+    }
+
+    .sidebar .nav-link i {
+        width: 21px;
+        flex-shrink: 0;
+        text-align: center;
+        font-size: 18px;
+    }
+
+    .sidebar .nav-link:hover,
+    .sidebar .nav-link.active {
+        background: #2563eb;
+        color: white;
+    }
+
+    .sidebar .logout {
+        margin-top: 20px;
+        border-top: 1px solid #334969;
+        border-radius: 0;
+        padding-top: 20px;
+    }
+
+    /* KONTEN UTAMA */
+    .main-content {
+        margin-left: 250px;
+        min-height: 100vh;
+        padding: 28px;
+    }
+
+    .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .page-title {
+        margin-bottom: 7px;
+        font-size: 25px;
+        font-weight: bold;
+    }
+
+    .muted {
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .stat-card,
+    .content-card {
+        height: 100%;
+        padding: 22px;
+        background: white;
+        border: 1px solid #e9eef5;
+        border-radius: 13px;
+        box-shadow: 0 3px 12px rgba(15, 23, 42, .03);
+    }
+
+    .section-title {
+        margin-bottom: 18px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .table thead th {
+        padding: 14px;
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 11px;
+        white-space: nowrap;
+    }
+
+    .table tbody td {
+        padding: 15px 14px;
+        font-size: 12px;
+        vertical-align: middle;
+    }
+
+    footer {
+        padding: 24px 0 5px;
+        color: #64748b;
+        font-size: 11px;
+        text-align: center;
+    }
+
+    /* =====================================
+       MODAL EDIT KELUHAN
+       Header dan footer tetap terlihat.
+       Isi form dapat di-scroll.
+       ===================================== */
+
+    #editComplaintModal .modal-dialog {
+        width: auto;
+        max-width: 900px;
+        height: calc(100vh - 2rem);
+        max-height: calc(100vh - 2rem);
+        margin: 1rem auto;
+    }
+
+    #editComplaintModal .modal-content {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        max-height: 100%;
+        overflow: hidden;
+    }
+
+    /* Form mengisi ruang di antara header dan footer */
+    #editComplaintModal #editComplaintForm {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    /* Hanya bagian body yang bisa di-scroll */
+    #editComplaintModal .modal-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto !important;
+        overflow-x: hidden;
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Header dan footer tidak ikut bergulir */
+    #editComplaintModal .modal-header,
+    #editComplaintModal .modal-footer {
+        flex-shrink: 0;
+    }
+
+    /* Tampilan scrollbar pada modal */
+    #editComplaintModal .modal-body::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #editComplaintModal .modal-body::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+
+    #editComplaintModal .modal-body::-webkit-scrollbar-thumb {
+        background: #94a3b8;
+        border-radius: 4px;
+    }
+
+    #editComplaintModal .modal-body::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+        .sidebar {
+            width: 72px;
+            padding: 20px 8px;
+        }
+
+        .brand {
+            justify-content: center;
+            padding: 0 0 25px;
+        }
+
+        .brand-text,
+        .menu-title,
+        .nav-text {
+            display: none;
+        }
+
+        .sidebar .nav-link {
+            justify-content: center;
+            padding: 12px 5px;
+        }
+
+        .main-content {
+            margin-left: 72px;
+            padding: 16px 12px;
+        }
+
+        .page-title {
+            font-size: 20px;
+        }
+
+        #editComplaintModal .modal-dialog {
+            width: auto;
+            max-width: none;
+            height: calc(100vh - 1rem);
+            max-height: calc(100vh - 1rem);
+            margin: 0.5rem;
+        }
+    }
+
+    @media (max-height: 600px) {
+        #editComplaintModal .modal-dialog {
+            height: calc(100vh - 1rem);
+            max-height: calc(100vh - 1rem);
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+    }
+</style>
+
+</head>
+
+<body>
+    
+    <!-- Sidebar diambil dari components/sidebar.html -->
+    <div id="sidebar-container"></div>
+    
+    <main class="main-content">
+        
+        <!-- Header Topbar -->
+        <header class="topbar">
+            <div>
+                <h1 class="page-title">Kategori</h1>
+                <div class="muted">List Data Kategori Inventaris</div>
+            </div>
+        </header>
+        
+        <!-- KONTEN TABEL KATEGORI -->
+        <section class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="content-card">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                        <div>
+                            <h2 class="section-title mb-1">Daftar Keluhan</h2>
+                            <div class="muted">Data keluhan pengguna terhadap aset</div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" id="refreshComplaints" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                            </button>
+                            <button type="button" id="addComplaintButton" class="btn btn-primary btn-sm"
+                                    data-bs-toggle="modal" data-bs-target="#addComplaintModal">
+                                <i class="bi bi-plus-lg me-1"></i> Tambah Keluhan
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-5">
+                            <label for="complaintSearch" class="form-label fw-semibold">Cari Keluhan</label>
+                            <input type="search" id="complaintSearch" class="form-control"
+                                   placeholder="Cari kode, judul, atau deskripsi...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="statusFilter" class="form-label fw-semibold">Filter Status</label>
+                            <select id="statusFilter" class="form-select">
+                                <option value="">Semua status</option>
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                                <option value="resolved">Resolved</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="unfixedFilter">
+                                <label class="form-check-label" for="unfixedFilter">Hanya keluhan belum selesai</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="complaintAlert" class="alert d-none" role="alert"></div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+    <tr>
+        <th>Kode</th>
+        <th>Judul Keluhan</th>
+        <th>Nama Aset</th>
+        <th>Lokasi</th>
+        <th>Deskripsi</th>
+        <th>Status</th>
+        <th>Catatan</th>
+        <th>Status Perbaikan</th>
+    </tr>
+</thead>
+<tbody id="complaintTableBody"></tbody>
+                            <tbody id="complaintTableBody">
+                                <tr><td colspan="10" class="text-center py-4">
+                                    <span class="spinner-border spinner-border-sm text-primary me-2"></span>
+                                    Memuat data keluhan...
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="complaintCount" class="text-muted small mt-2">Total keluhan: 0</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Modal Tambah Keluhan -->
+        <div class="modal fade" id="addComplaintModal" tabindex="-1" aria-labelledby="addComplaintModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title fw-bold" id="addComplaintModalLabel">
+                                <i class="bi bi-chat-square-text me-2"></i>Tambah Keluhan
+                            </h5>
+                            <small class="text-muted">Formulir pengajuan keluhan baru</small>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <form id="addComplaintForm" enctype="multipart/form-data">
+                        <div class="modal-body p-4">
+                            <div id="addComplaintAlert" class="alert d-none" role="alert"></div>
+                            <div class="row g-3">
+                                   <input type="hidden" id="addUserID" name="userID">
+                                <div class="col-md-12">
+                                    <label for="addAssetID" class="form-label">Aset <span class="text-danger">*</span></label>
+                                    <select id="addAssetID" class="form-select" required>
+                                        <option value="">Memuat daftar aset...</option>
+                                    </select>
+                                    <small class="text-muted">Pilih aset yang mengalami masalah.</small>
+                                </div>
+                                <div class="col-12">
+                                    <label for="addTitle" class="form-label">Judul Keluhan <span class="text-danger">*</span></label>
+                                    <input type="text" id="addTitle" class="form-control" maxlength="200"
+                                           placeholder="Contoh: Printer tidak bisa mencetak" required>
+                                </div>
+                                <div class="col-12">
+                                    <label for="addDescription" class="form-label">Deskripsi <span class="text-danger">*</span></label>
+                                    <textarea id="addDescription" class="form-control" rows="3"
+                                              placeholder="Jelaskan masalah yang terjadi..." required></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="addPriority" class="form-label">Prioritas (0–1)</label>
+                                    <input type="number" id="addPriority" class="form-control" min="0" max="1" step="0.1" value="0.3">
+                                    <small class="text-muted">Contoh: 0.3 (rendah), 0.6 (sedang), 0.9 (tinggi).</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="addStatus" class="form-label">Status</label>
+                                    <select id="addStatus" class="form-select">
+                                        <option value="low" selected>Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                        <option value="critical">Critical</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label for="addNote" class="form-label">Catatan</label>
+                                    <textarea id="addNote" class="form-control" rows="2"
+                                              placeholder="Catatan atau tindak lanjut awal"></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label for="addImage" class="form-label">Lampiran Gambar (opsional)</label>
+                                    <input type="file" id="addImage" class="form-control" accept="image/jpeg,image/png,image/gif">
+                                    <small class="text-muted">Lampirkan foto kondisi aset. Maksimal 5 MB; format gambar yang didukung bergantung pada validasi backend.</small>
+                                    <div class="mt-2 d-none" id="addImagePreviewWrapper">
+                                        <img id="addImagePreview" src="" alt="Pratinjau gambar keluhan" class="img-thumbnail" style="max-height: 180px; max-width: 100%;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" id="saveComplaintButton" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> Simpan Keluhan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Edit Keluhan -->
+        <div class="modal fade" id="editComplaintModal" tabindex="-1" aria-labelledby="editComplaintModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-primary text-white">
+                        <div>
+                            <h5 class="modal-title fw-bold" id="editComplaintModalLabel">
+                                <i class="bi bi-pencil-square me-2"></i>Edit Keluhan
+                            </h5>
+                            <small class="text-white-50">Perbarui informasi dan tindak lanjut keluhan</small>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <form id="editComplaintForm">
+                        <div class="modal-body p-4">
+                            <div id="editComplaintAlert" class="alert d-none" role="alert"></div>
+                            <input type="hidden" id="editComplaintId">
+                            <div class="row g-3">                    
+                                   <input type="hidden" id="editUserID" name="userID">
+                              <div class="col-12">
+    <label for="editAssetID" class="form-label">Aset</label>
+    <select class="form-select" id="editAssetID" name="assetID" required>
+        <option value="">Pilih Aset</option>
+    </select>
+</div>
+                                <div class="col-12">
+                                    <label for="editTitle" class="form-label">Judul Keluhan <span class="text-danger">*</span></label>
+                                    <input type="text" id="editTitle" class="form-control" maxlength="200" required>
+                                </div>
+                                <div class="col-12">
+                                    <label for="editDescription" class="form-label">Deskripsi <span class="text-danger">*</span></label>
+                                    <textarea id="editDescription" class="form-control" rows="3" required></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="editPriority" class="form-label">Prioritas (0–1)</label>
+                                    <input type="number" id="editPriority" class="form-control" min="0" max="1" step="0.1" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="editStatus" class="form-label">Status</label>
+                                    <select id="editStatus" class="form-select" required>
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                        <option value="critical">Critical</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label for="editNote" class="form-label">Catatan</label>
+                                    <textarea id="editNote" class="form-control" rows="2"></textarea>
+                                </div>
+                                <!-- Lampiran Gambar pada Modal Edit -->
+<div class="col-12">
+    <label for="editImage" class="form-label fw-semibold">
+        Lampiran Gambar
+    </label>
+
+    <!-- Gambar yang sudah tersimpan -->
+    <div id="editCurrentImageWrapper" class="mb-3 d-none">
+        <p class="small text-muted mb-2">Gambar saat ini:</p>
+        <img
+            id="editCurrentImage" 
+            src=""
+            alt="Gambar keluhan saat ini"
+            class="img-thumbnail"
+            style="max-width: 100%; max-height: 250px; object-fit: contain;">
+    </div>
+
+    <!-- Input untuk mengganti gambar -->
+    <input
+        type="file"
+        id="editImage"
+        name="image"
+        class="form-control"
+        accept="image/jpeg,image/png,image/gif">
+
+    <div class="form-text">
+        Pilih gambar baru jika ingin mengganti gambar saat ini.
+        Format JPG, PNG, atau GIF, maksimal 5 MB.
+        Kosongkan jika tidak ingin mengganti gambar.
+    </div>
+
+    <!-- Pratinjau gambar baru -->
+    <div id="editImagePreviewWrapper" class="mt-3 d-none">
+        <p class="small text-muted mb-2">Pratinjau gambar baru:</p>
+        <img
+            id="editImagePreview"
+            src=""
+            alt="Pratinjau gambar baru"
+            class="img-thumbnail"
+            style="max-width: 100%; max-height: 250px; object-fit: contain;">
+    </div>
+</div>
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="editIsFixed">
+                                        <label class="form-check-label fw-semibold" for="editIsFixed">Keluhan sudah diperbaiki (is_fixed)</label>
+                                    </div>
+                                    <small class="text-muted">Jika dicentang, backend akan mengubah status menjadi resolved.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" id="updateComplaintButton" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> Simpan Perubahan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Detail Keluhan -->
+        <div class="modal fade" id="detailComplaintModal" tabindex="-1" aria-labelledby="detailComplaintModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-light">
+                        <div>
+                            <h5 class="modal-title fw-bold" id="detailComplaintModalLabel">
+                                <i class="bi bi-info-circle text-primary me-2"></i>Detail Keluhan
+                            </h5>
+                            <small class="text-muted">Informasi lengkap dan status penanganan</small>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6"><div class="p-3 bg-light rounded border"><div class="text-muted small mb-1">Kode Keluhan</div><div class="fw-bold text-primary font-monospace" id="detailComplaintCode">-</div></div></div>
+                            <div class="col-md-6"><div class="p-3 bg-light rounded border"><div class="text-muted small mb-1">Judul</div><div class="fw-semibold" id="detailComplaintTitle">-</div></div></div>
+                            <div class="col-md-4"><div class="p-3 bg-light rounded border"><div class="text-muted small mb-1">User ID</div><div class="fw-semibold" id="detailComplaintUser">-</div></div></div>
+                            <div class="col-md-4"><div class="p-3 bg-light rounded border"><div class="text-muted small mb-1">Asset ID</div><div class="fw-semibold" id="detailComplaintAsset">-</div></div></div>
+                            <div class="col-md-4"><div class="p-3 bg-light rounded border"><div class="text-muted small mb-1">Prioritas</div><div class="fw-semibold" id="detailComplaintPriority">-</div></div></div>
+                            <div class="col-md-6"><div class="p-3 bg-light rounded border"><div class="text-muted small mb-1">Status</div><div id="detailComplaintStatus">-</div></div></div>
+                            <div class="col-md-6"><div class="p-3 bg-light rounded border"><div class="text-muted small mb-1">Status Perbaikan</div><div id="detailComplaintFixed">-</div></div></div>
+                            <div class="col-12"><div class="p-3 bg-light rounded border"><div class="text-muted small mb-1">Deskripsi</div><div id="detailComplaintDescription" class="text-secondary text-break">-</div></div></div>
+                            <div class="col-12"><div class="p-3 bg-light rounded border"><div class="text-muted small mb-1">Catatan</div><div id="detailComplaintNote" class="text-secondary text-break">-</div></div></div>
+                            <div class="col-md-6"><div class="p-3 bg-light rounded border"><div class="text-muted small mb-1">Dibuat</div><div id="detailComplaintCreated" class="small">-</div></div></div>
+                            <div class="col-md-6"><div class="p-3 bg-light rounded border"><div class="text-muted small mb-1">Diperbarui</div><div id="detailComplaintUpdated" class="small">-</div></div></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                        <button type="button" id="btnDetailToEditComplaint" class="btn btn-warning">
+                            <i class="bi bi-pencil-square me-1"></i> Ubah Keluhan Ini
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Batas Modal Detail -->
+
+        <footer>
+            &copy; 2026 Sistem Manajemen Inventaris Cerdas
+        </footer>
+
+    </main>
+
+    <!-- Library eksternal -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
+    
+    <!-- JavaScript lokal -->
+   <!-- <script src="../js/auth.js"></script>-->
+   <script src="../config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/layout.js"></script>
+      <script src="ajax/complaint.js?v=1.0"></script>
+
+</body>
+</html>

@@ -20,7 +20,7 @@ type LendingAsset struct {
 	User   auth.User `json:"user_detail" gorm:"foreignKey:UserID;references:ID"`
 
 	AssetID uint        `json:"asset_id" gorm:"column:asset_id;not null;index"`
-	Asset   asset.Asset `json:"asset_detail" gorm:"references:AssetID"`
+	Asset   asset.Asset `json:"asset_detail" gorm:"foreignKey:AssetID;references:AssetID"`
 
 	QtyLending int `json:"qty_lending" gorm:"column:qty_lending;not null;default:1"`
 

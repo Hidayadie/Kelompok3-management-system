@@ -2,8 +2,12 @@
  * AJAX & Modal CRUD Kategori - Sistem Inventaris Cerdas
  */
 
-const API_BASE = "http://localhost:8080/api/private";
-const CATEGORY_URL = `${API_BASE}/categories`;
+//const API_BASE = "http://localhost:8080/api/private";
+
+const API_BASE = window.APP_CONFIG.API_BASE_URL; //"http://localhost:8080",
+const FRONTEND_BASE_URL= window.APP_CONFIG.BASIC_URL; //"http://localhost:8088",
+
+const CATEGORY_URL = `${API_BASE}/api/private/categories`;
 
 $(document).ready(function () {
     // DOM References
@@ -91,84 +95,167 @@ $(document).ready(function () {
     // ==========================================
 
     function renderTable() {
-        const selectedId = $filter.length ? $filter.val() : "";
+    const selectedId = $filter.length ? $filter.val() : "";
 
-        const filtered = selectedId
-            ? categories.filter(item => String(item.id) === String(selectedId))
-            : categories;
+    const filtered = selectedId
+        ? categories.filter(item => String(item.id) === String(selectedId))
+        : categories;
 
-        $tableBody.empty();
+    // Hancurkan instance DataTables lama sebelum merender ulang.
+    if ($.fn.DataTable.isDataTable("#categoryTable")) {
+        $("#categoryTable").DataTable().destroy();
+    }
 
-        if (filtered.length === 0) {
-            $tableBody.html(`
-                <tr>
-                    <td colspan="4" class="text-center text-muted py-4">
-                        <i class="bi bi-tags fs-2 d-block mb-2 text-secondary"></i>
-                        Tidak ada data kategori ditemukan.
-                    </td>
-                </tr>
-            `);
-            $count.text("Total kategori: 0");
-            return;
-        }
+    $tableBody.empty();
 
-        filtered.forEach(function (item, index) {
-            const $row = $("<tr>");
+    if (filtered.length === 0) {
+        $tableBody.html(`
+            <tr>
+                <td colspan="4" class="text-center text-muted py-4">
+                    <i class="bi bi-tags fs-2 d-block mb-2 text-secondary"></i>
+                    Tidak ada data kategori ditemukan.
+                </td>
+            </tr>
+        `);
 
-            // 1. No.
-            $("<td>").addClass("text-center").text(index + 1).appendTo($row);
+        $count.text("Total kategori: 0");
 
-            // 2. Nama Kategori
-            $("<td>").html(`
-                <span class="fw-semibold text-dark">${escapeHtml(item.name ?? "-")}</span>
-            `).appendTo($row);
+        // Inisialisasi DataTables meskipun data kosong.
+        $("#categoryTable").DataTable({
+            paging: true,
+            pageLength: 10,
+            searching: true,
+            ordering: true,
+            info: true,
+            autoWidth: false,
+            language: {
+                emptyTable: "Tidak ada data kategori",
+                zeroRecords: "Kategori tidak ditemukan",
+                search: "Cari:",
+                lengthMenu: "Tampilkan _MENU_ data",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ kategori",
+                infoEmpty: "Tidak ada data kategori",
+                infoFiltered: "(difilter dari _MAX_ total kategori)",
+                paginate: {
+                    first: "Pertama",
+                    last: "Terakhir",
+                    next: "Berikutnya",
+                    previous: "Sebelumnya"
+                }
+            }
+        });
 
-            // 3. Tanggal Dibuat
-            $("<td>").addClass("small text-muted").text(formatDate(item.created_at)).appendTo($row);
+        return;
+    }
 
-            // 4. Kolom Aksi
-            const $actionTd = $("<td>").addClass("text-center");
-            const $actionGroup = $("<div>").addClass("btn-group btn-group-sm").attr("role", "group");
+    filtered.forEach(function (item, index) {
+        const $row = $("<tr>");
 
-            // Tombol Detail
-            $("<button>", {
-                type: "button",
-                class: "btn btn-outline-info btn-detail-category",
-                title: "Detail Kategori"
-            })
+        // 1. Nomor
+        $("<td>")
+            .addClass("text-center")
+            .text(index + 1)
+            .appendTo($row);
+
+        // 2. Nama kategori
+        $("<td>")
+            .html(`
+                <span class="fw-semibold text-dark">
+                    ${escapeHtml(item.name ?? "-")}
+                </span>
+            `)
+            .appendTo($row);
+
+        // 3. Tanggal dibuat
+        $("<td>")
+            .addClass("small text-muted")
+            .text(formatDate(item.created_at))
+            .appendTo($row);
+
+        // 4. Kolom aksi
+        const $actionTd = $("<td>").addClass("text-center");
+
+        const $actionGroup = $("<div>")
+            .addClass("btn-group btn-group-sm")
+            .attr("role", "group");
+
+        // Tombol detail
+        $("<button>", {
+            type: "button",
+            class: "btn btn-outline-info btn-detail-category",
+            title: "Detail Kategori"
+        })
             .attr("data-id", item.id)
             .html('<i class="bi bi-eye"></i>')
             .appendTo($actionGroup);
 
-            // Tombol Ubah
-            $("<button>", {
-                type: "button",
-                class: "btn btn-outline-warning btn-edit-category",
-                title: "Ubah Kategori"
-            })
+        // Tombol ubah
+        $("<button>", {
+            type: "button",
+            class: "btn btn-outline-warning btn-edit-category",
+            title: "Ubah Kategori"
+        })
             .attr("data-id", item.id)
             .html('<i class="bi bi-pencil-square"></i>')
             .appendTo($actionGroup);
 
-            // Tombol Hapus
-            $("<button>", {
-                type: "button",
-                class: "btn btn-outline-danger btn-delete-category",
-                title: "Hapus Kategori"
-            })
+        // Tombol hapus
+        $("<button>", {
+            type: "button",
+            class: "btn btn-outline-danger btn-delete-category",
+            title: "Hapus Kategori"
+        })
             .attr("data-id", item.id)
             .attr("data-name", item.name ?? "")
             .html('<i class="bi bi-trash"></i>')
             .appendTo($actionGroup);
 
-            $actionTd.append($actionGroup);
-            $row.append($actionTd);
+        $actionTd.append($actionGroup);
+        $row.append($actionTd);
 
-            $tableBody.append($row);
-        });
+        $tableBody.append($row);
+    });
 
-        $count.text(`Menampilkan ${filtered.length} dari ${categories.length} kategori`);
-    }
+    $count.text(
+        `Menampilkan ${filtered.length} dari ${categories.length} kategori`
+    );
+
+    // Inisialisasi instance DataTables.
+    $("#categoryTable").DataTable({
+        paging: true,
+        pageLength: 10,
+        lengthMenu: [
+            [10, 25, 50, 100],
+            [10, 25, 50, 100]
+        ],
+        searching: true,
+        ordering: true,
+        info: true,
+        autoWidth: false,
+        order: [],
+        columnDefs: [
+            {
+                targets: [0, 3],
+                orderable: false
+            }
+        ],
+        language: {
+            emptyTable: "Tidak ada data kategori",
+            zeroRecords: "Kategori tidak ditemukan",
+            search: "Cari:",
+            lengthMenu: "Tampilkan _MENU_ data",
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ kategori",
+            infoEmpty: "Tidak ada data kategori",
+            infoFiltered: "(difilter dari _MAX_ total kategori)",
+            paginate: {
+                first: "Pertama",
+                last: "Terakhir",
+                next: "Berikutnya",
+                previous: "Sebelumnya"
+            }
+        }
+    });
+}
 
     function loadCategories() {
         $refresh.prop("disabled", true);

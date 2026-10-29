@@ -2,10 +2,13 @@
  * AJAX & Modal CRUD Aset - Sistem Inventaris Cerdas
  */
 
-const API_BASE = "http://localhost:8080/api/private";
-const ASSET_URL = `${API_BASE}/assets`;
-const CATEGORY_URL = `${API_BASE}/categories`;
-const LOCATION_URL = `${API_BASE}/location`;
+// Konfigurasi API
+const API_BASE = window.APP_CONFIG.API_BASE_URL;
+const FRONTEND_BASE_URL = window.APP_CONFIG.BASIC_URL;
+
+const ASSET_URL = `${API_BASE}/api/private/assets`;
+const CATEGORY_URL = `${API_BASE}/api/private/categories`;
+const LOCATION_URL = `${API_BASE}/api/private/location`;
 
 $(document).ready(function () {
     // DOM References
@@ -31,6 +34,9 @@ $(document).ready(function () {
     let assets = [];
     let categories = [];
     let locations = [];
+
+    // Instance DataTables
+    let assetDataTable = null;
 
     // Inisialisasi Select2 Filter
     if ($filter.length && $.fn.select2) {
@@ -76,7 +82,9 @@ $(document).ready(function () {
 
     function formatDate(value) {
         if (!value) return "-";
+
         const date = new Date(value);
+
         if (Number.isNaN(date.getTime())) return value;
 
         return date.toLocaleString("id-ID", {
@@ -91,6 +99,7 @@ $(document).ready(function () {
 
     function renderConditionBadge(condition) {
         const cond = (condition || "").trim().toLowerCase();
+
         if (cond === "baik") {
             return '<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle me-1"></i>Baik</span>';
         } else if (cond === "rusak ringan") {
@@ -98,6 +107,7 @@ $(document).ready(function () {
         } else if (cond === "rusak berat") {
             return '<span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-x-circle me-1"></i>Rusak Berat</span>';
         }
+
         return `<span class="badge bg-secondary">${escapeHtml(condition || "-")}</span>`;
     }
 
@@ -105,7 +115,82 @@ $(document).ready(function () {
         if (status === true || status === "true") {
             return '<span class="badge bg-success"><i class="bi bi-check2 me-1"></i>Aktif</span>';
         }
+
         return '<span class="badge bg-secondary"><i class="bi bi-x me-1"></i>Tidak Aktif</span>';
+    }
+
+    // ==========================================
+    // DATATABLES
+    // ==========================================
+
+    function destroyAssetDataTable() {
+        if (
+            $.fn.DataTable &&
+            $.fn.DataTable.isDataTable("#assetTable")
+        ) {
+            $("#assetTable").DataTable().destroy();
+        }
+
+        assetDataTable = null;
+    }
+
+    function initAssetDataTable() {
+        if (!$.fn.DataTable || !$("#assetTable").length) {
+            console.warn(
+                "DataTables belum tersedia atau #assetTable tidak ditemukan."
+            );
+            return;
+        }
+
+        // Hindari inisialisasi berulang.
+        if ($.fn.DataTable.isDataTable("#assetTable")) {
+            assetDataTable = $("#assetTable").DataTable();
+            return;
+        }
+
+        assetDataTable = $("#assetTable").DataTable({
+            pageLength: 10,
+
+            lengthMenu: [
+                [10, 25, 50, 100, -1],
+                [10, 25, 50, 100, "Semua"]
+            ],
+
+            searching: true,
+            ordering: true,
+            paging: true,
+            info: true,
+            autoWidth: false,
+            scrollX: true,
+
+            columnDefs: [
+                {
+                    targets: [0, 9],
+                    orderable: false,
+                    searchable: false
+                }
+            ],
+
+            language: {
+                search: "Cari:",
+                searchPlaceholder: "Cari data aset...",
+                lengthMenu: "Tampilkan _MENU_ data",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                infoEmpty: "Tidak ada data",
+                infoFiltered: "(difilter dari _MAX_ total data)",
+                zeroRecords: "Data tidak ditemukan",
+                emptyTable: "Belum ada data aset",
+                loadingRecords: "Memuat data...",
+                processing: "Memproses...",
+
+                paginate: {
+                    first: "Pertama",
+                    last: "Terakhir",
+                    next: "Berikutnya",
+                    previous: "Sebelumnya"
+                }
+            }
+        });
     }
 
     // ==========================================
@@ -114,40 +199,72 @@ $(document).ready(function () {
 
     function loadCategoryOptions(targetSelector, selectedValue = null) {
         const $target = $(targetSelector);
-        if (!$target.length) return Promise.resolve();
+
+        if (!$target.length) {
+            return Promise.resolve();
+        }
 
         if (categories.length > 0) {
             populateCategorySelect($target, selectedValue);
             return Promise.resolve(categories);
         }
 
-        $target.html('<option value="">Memuat kategori...</option>');
+        $target.html(
+            '<option value="">Memuat kategori...</option>'
+        );
 
         return $.ajax({
             url: CATEGORY_URL,
             method: "GET",
             dataType: "json",
-            xhrFields: { withCredentials: true },
-            headers: { Accept: "application/json" }
+            xhrFields: {
+                withCredentials: true
+            },
+            headers: {
+                Accept: "application/json"
+            }
         }).then(function (response) {
-            categories = Array.isArray(response.data) ? response.data : [];
+            categories = Array.isArray(response.data)
+                ? response.data
+                : [];
+
             populateCategorySelect($target, selectedValue);
+
             return categories;
         }).catch(function (xhr) {
-            console.error("Gagal memuat kategori:", xhr.status, xhr.responseText);
-            $target.html('<option value="">Gagal memuat kategori</option>');
+            console.error(
+                "Gagal memuat kategori:",
+                xhr.status,
+                xhr.responseText
+            );
+
+            $target.html(
+                '<option value="">Gagal memuat kategori</option>'
+            );
         });
     }
 
     function populateCategorySelect($target, selectedValue) {
-        $target.empty().append(new Option("Pilih kategori", ""));
+        $target.empty().append(
+            new Option("Pilih kategori", "")
+        );
+
         categories.forEach(function (cat) {
-            const opt = new Option(cat.name ?? "Tanpa nama", cat.id);
-            if (selectedValue !== null && String(cat.id) === String(selectedValue)) {
+            const opt = new Option(
+                cat.name ?? "Tanpa nama",
+                cat.id
+            );
+
+            if (
+                selectedValue !== null &&
+                String(cat.id) === String(selectedValue)
+            ) {
                 opt.selected = true;
             }
+
             $target.append(opt);
         });
+
         if (selectedValue !== null) {
             $target.val(String(selectedValue));
         }
@@ -155,112 +272,171 @@ $(document).ready(function () {
 
     function loadLocationOptions(targetSelector, selectedValue = null) {
         const $target = $(targetSelector);
-        if (!$target.length) return Promise.resolve();
+
+        if (!$target.length) {
+            return Promise.resolve();
+        }
 
         if (locations.length > 0) {
             populateLocationSelect($target, selectedValue);
             return Promise.resolve(locations);
         }
 
-        $target.html('<option value="">Memuat lokasi...</option>');
+        $target.html(
+            '<option value="">Memuat lokasi...</option>'
+        );
 
         return $.ajax({
             url: LOCATION_URL,
             method: "GET",
             dataType: "json",
-            xhrFields: { withCredentials: true },
-            headers: { Accept: "application/json" }
+            xhrFields: {
+                withCredentials: true
+            },
+            headers: {
+                Accept: "application/json"
+            }
         }).then(function (response) {
-            locations = Array.isArray(response.data) ? response.data : [];
+            locations = Array.isArray(response.data)
+                ? response.data
+                : [];
+
             populateLocationSelect($target, selectedValue);
+
             return locations;
         }).catch(function (xhr) {
-            console.error("Gagal memuat lokasi:", xhr.status, xhr.responseText);
-            $target.html('<option value="">Gagal memuat lokasi</option>');
+            console.error(
+                "Gagal memuat lokasi:",
+                xhr.status,
+                xhr.responseText
+            );
+
+            $target.html(
+                '<option value="">Gagal memuat lokasi</option>'
+            );
         });
     }
 
     function populateLocationSelect($target, selectedValue) {
-        $target.empty().append(new Option("Pilih lokasi", ""));
+        $target.empty().append(
+            new Option("Pilih lokasi", "")
+        );
+
         locations.forEach(function (loc) {
             const locId = loc.location_id ?? loc.id;
-            const locName = loc.location_name ?? loc.name ?? "Tanpa nama";
+            const locName =
+                loc.location_name ?? loc.name ?? "Tanpa nama";
+
             const opt = new Option(locName, locId);
-            if (selectedValue !== null && String(locId).toLowerCase() === String(selectedValue).toLowerCase()) {
+
+            if (
+                selectedValue !== null &&
+                String(locId).toLowerCase() ===
+                String(selectedValue).toLowerCase()
+            ) {
                 opt.selected = true;
             }
+
             $target.append(opt);
         });
+
         if (selectedValue !== null) {
             $target.val(String(selectedValue));
         }
     }
 
     // ==========================================
-    // READ / LOAD ASSETS TABLE
+    // READ / RENDER ASSETS TABLE
     // ==========================================
 
     function renderTable() {
-        const selectedId = $filter.length ? $filter.val() : "";
+        const selectedId = $filter.length
+            ? $filter.val()
+            : "";
 
         const filtered = selectedId
-            ? assets.filter(item => String(item.asset_id) === String(selectedId))
+            ? assets.filter(
+                item =>
+                    String(item.asset_id) === String(selectedId)
+            )
             : assets;
+
+        // Hancurkan DataTables sebelum tbody diubah.
+        destroyAssetDataTable();
 
         $tableBody.empty();
 
         if (filtered.length === 0) {
-            $tableBody.html(`
-                <tr>
-                    <td colspan="10" class="text-center text-muted py-4">
-                        <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
-                        Tidak ada data aset ditemukan.
-                    </td>
-                </tr>
-            `);
             $count.text("Total aset: 0");
+
+            // DataTables akan menampilkan pesan tabel kosong.
+            initAssetDataTable();
+
             return;
         }
 
         filtered.forEach(function (item, index) {
             const $row = $("<tr>");
 
-            // 1. No.
-            $("<td>").addClass("text-center").text(index + 1).appendTo($row);
+            // 1. Nomor
+            $("<td>")
+                .addClass("text-center")
+                .text(index + 1)
+                .appendTo($row);
 
             // 2. Kode Aset
             $("<td>").html(`
-                <span class="fw-bold text-primary font-monospace">${escapeHtml(item.code_asset ?? "-")}</span>
+                <span class="fw-bold text-primary font-monospace">
+                    ${escapeHtml(item.code_asset ?? "-")}
+                </span>
             `).appendTo($row);
 
             // 3. Nama Aset
             $("<td>").html(`
-                <span class="fw-semibold text-dark">${escapeHtml(item.nama_asset ?? "-")}</span>
+                <span class="fw-semibold text-dark">
+                    ${escapeHtml(item.nama_asset ?? "-")}
+                </span>
             `).appendTo($row);
 
             // 4. Kategori
-            $("<td>").text(item.category_detail?.name ?? "-").appendTo($row);
+            $("<td>")
+                .text(item.category_detail?.name ?? "-")
+                .appendTo($row);
 
             // 5. Lokasi
-            $("<td>").text(item.location_detail?.location_name ?? "-").appendTo($row);
+            $("<td>")
+                .text(item.location_detail?.location_name ?? "-")
+                .appendTo($row);
 
             // 6. Kondisi
-            $("<td>").html(renderConditionBadge(item.condition)).appendTo($row);
+            $("<td>")
+                .html(renderConditionBadge(item.condition))
+                .appendTo($row);
 
             // 7. Status
-            $("<td>").html(renderStatusBadge(item.status)).appendTo($row);
+            $("<td>")
+                .html(renderStatusBadge(item.status))
+                .appendTo($row);
 
             // 8. Jumlah
             $("<td>").addClass("text-center").html(`
-                <span class="badge bg-light text-dark border px-2 py-1">${Number(item.qty_in ?? 0)}</span>
+                <span class="badge bg-light text-dark border px-2 py-1">
+                    ${Number(item.qty_in ?? 0)}
+                </span>
             `).appendTo($row);
 
             // 9. Terakhir Diperbarui
-            $("<td>").addClass("small text-muted").text(formatDate(item.update_at)).appendTo($row);
+            $("<td>")
+                .addClass("small text-muted")
+                .text(formatDate(item.update_at))
+                .appendTo($row);
 
-            // 10. Kolom Aksi
+            // 10. Aksi
             const $actionTd = $("<td>").addClass("text-center");
-            const $actionGroup = $("<div>").addClass("btn-group btn-group-sm").attr("role", "group");
+
+            const $actionGroup = $("<div>")
+                .addClass("btn-group btn-group-sm")
+                .attr("role", "group");
 
             // Tombol Detail
             $("<button>", {
@@ -268,9 +444,9 @@ $(document).ready(function () {
                 class: "btn btn-outline-info btn-detail-asset",
                 title: "Detail Aset"
             })
-            .attr("data-id", item.asset_id)
-            .html('<i class="bi bi-eye"></i>')
-            .appendTo($actionGroup);
+                .attr("data-id", item.asset_id)
+                .html('<i class="bi bi-eye"></i>')
+                .appendTo($actionGroup);
 
             // Tombol Ubah
             $("<button>", {
@@ -278,9 +454,9 @@ $(document).ready(function () {
                 class: "btn btn-outline-warning btn-edit-asset",
                 title: "Ubah Aset"
             })
-            .attr("data-id", item.asset_id)
-            .html('<i class="bi bi-pencil-square"></i>')
-            .appendTo($actionGroup);
+                .attr("data-id", item.asset_id)
+                .html('<i class="bi bi-pencil-square"></i>')
+                .appendTo($actionGroup);
 
             // Tombol Hapus
             $("<button>", {
@@ -288,23 +464,34 @@ $(document).ready(function () {
                 class: "btn btn-outline-danger btn-delete-asset",
                 title: "Hapus Aset"
             })
-            .attr("data-id", item.asset_id)
-            .attr("data-name", item.nama_asset ?? "")
-            .attr("data-code", item.code_asset ?? "")
-            .html('<i class="bi bi-trash"></i>')
-            .appendTo($actionGroup);
+                .attr("data-id", item.asset_id)
+                .attr("data-name", item.nama_asset ?? "")
+                .attr("data-code", item.code_asset ?? "")
+                .html('<i class="bi bi-trash"></i>')
+                .appendTo($actionGroup);
 
             $actionTd.append($actionGroup);
             $row.append($actionTd);
-
             $tableBody.append($row);
         });
 
-        $count.text(`Menampilkan ${filtered.length} dari ${assets.length} aset`);
+        $count.text(
+            `Menampilkan ${filtered.length} dari ${assets.length} aset`
+        );
+
+        // Panggil DataTables setelah semua baris dimasukkan.
+        initAssetDataTable();
     }
+
+    // ==========================================
+    // LOAD ASSETS VIA AJAX
+    // ==========================================
 
     function loadAssets() {
         $refresh.prop("disabled", true);
+
+        destroyAssetDataTable();
+
         $tableBody.html(`
             <tr>
                 <td colspan="10" class="text-center py-4">
@@ -320,12 +507,26 @@ $(document).ready(function () {
             url: ASSET_URL,
             method: "GET",
             dataType: "json",
-            xhrFields: { withCredentials: true },
-            headers: { Accept: "application/json" },
+
+            xhrFields: {
+                withCredentials: true
+            },
+
+            headers: {
+                Accept: "application/json"
+            },
+
             cache: false,
+
             success: function (response) {
-                if (!response || !Array.isArray(response.data)) {
-                    showAlert("Format data respons aset dari server tidak valid.");
+                if (
+                    !response ||
+                    !Array.isArray(response.data)
+                ) {
+                    showAlert(
+                        "Format data respons aset dari server tidak valid."
+                    );
+
                     $tableBody.html(`
                         <tr>
                             <td colspan="10" class="text-center text-danger py-4">
@@ -333,64 +534,103 @@ $(document).ready(function () {
                             </td>
                         </tr>
                     `);
+
                     return;
                 }
 
                 assets = response.data;
 
-                // Perbarui Dropdown Filter Select2
+                // Perbarui dropdown filter.
                 if ($filter.length) {
                     const currentVal = $filter.val();
-                    $filter.empty().append(new Option("Semua Aset", "", true, true));
+
+                    $filter.empty().append(
+                        new Option("Semua Aset", "", true, true)
+                    );
+
                     assets.forEach(function (item) {
                         $filter.append(
                             new Option(
-                                `${item.code_asset ? '[' + item.code_asset + '] ' : ''}${item.nama_asset ?? 'Tanpa nama'}`,
+                                `${
+                                    item.code_asset
+                                        ? "[" + item.code_asset + "] "
+                                        : ""
+                                }${item.nama_asset ?? "Tanpa nama"}`,
                                 String(item.asset_id)
                             )
                         );
                     });
-                    if (currentVal && assets.some(a => String(a.asset_id) === String(currentVal))) {
-                        $filter.val(currentVal).trigger("change.select2");
+
+                    if (
+                        currentVal &&
+                        assets.some(
+                            a =>
+                                String(a.asset_id) ===
+                                String(currentVal)
+                        )
+                    ) {
+                        $filter
+                            .val(currentVal)
+                            .trigger("change.select2");
                     } else {
-                        $filter.val("").trigger("change.select2");
+                        $filter
+                            .val("")
+                            .trigger("change.select2");
                     }
                 }
 
                 renderTable();
 
                 if (assets.length === 0) {
-                    showAlert("Belum ada data aset yang terdaftar.", "info");
+                    showAlert(
+                        "Belum ada data aset yang terdaftar.",
+                        "info"
+                    );
                 }
             },
+
             error: function (xhr, status, error) {
-                console.error("AJAX loadAssets gagal:", xhr.status, status, error, xhr.responseText);
+                console.error(
+                    "AJAX loadAssets gagal:",
+                    xhr.status,
+                    status,
+                    error,
+                    xhr.responseText
+                );
+
                 let message = "Gagal memuat data aset.";
+
                 if (xhr.status === 401 || xhr.status === 403) {
-                    message = "Sesi login telah berakhir atau akses ditolak. Silakan login kembali.";
+                    message =
+                        "Sesi login telah berakhir atau akses ditolak. Silakan login kembali.";
                 } else if (xhr.status === 404) {
-                    message = "Endpoint data aset tidak ditemukan.";
+                    message =
+                        "Endpoint data aset tidak ditemukan.";
                 } else if (xhr.status === 0) {
-                    message = "Tidak dapat terhubung ke server. Periksa server API dan CORS.";
+                    message =
+                        "Tidak dapat terhubung ke server. Periksa server API dan CORS.";
                 }
 
                 showAlert(message, "danger");
+
                 $tableBody.html(`
                     <tr>
                         <td colspan="10" class="text-center text-danger py-4">
-                            ${message}
+                            ${escapeHtml(message)}
                         </td>
                     </tr>
                 `);
             },
+
             complete: function () {
                 $refresh.prop("disabled", false);
             }
         });
     }
 
-    // Filter change and refresh click
+    // Filter dan tombol refresh
     $filter.on("change", renderTable);
+
     $refresh.on("click", function () {
         loadAssets();
     });
@@ -401,21 +641,25 @@ $(document).ready(function () {
 
     $("#addAssetButton").on("click", function () {
         hideModalAlert($addAssetAlert);
+
         $addAssetForm[0].reset();
+
         $("#assetQty").val("1");
         $("#assetStatus").val("true");
 
-        // Load dropdown kategori & lokasi
         loadCategoryOptions("#assetCategory");
         loadLocationOptions("#assetLocation");
 
         if (addModalEl) {
-            bootstrap.Modal.getOrCreateInstance(addModalEl).show();
+            bootstrap.Modal
+                .getOrCreateInstance(addModalEl)
+                .show();
         }
     });
 
     $addAssetForm.on("submit", function (event) {
         event.preventDefault();
+
         hideModalAlert($addAssetAlert);
 
         const payload = {
@@ -429,37 +673,61 @@ $(document).ready(function () {
             description: $("#assetDescription").val().trim()
         };
 
-        // Validasi Frontend
+        // Validasi input
         if (!payload.code_asset) {
-            showModalAlert($addAssetAlert, "Kode aset wajib diisi.");
-            return;
-        }
-        if (!payload.nama_asset) {
-            showModalAlert($addAssetAlert, "Nama aset wajib diisi.");
-            return;
-        }
-        if (!payload.category || isNaN(payload.category)) {
-            showModalAlert($addAssetAlert, "Silakan pilih kategori aset.");
-            return;
-        }
-        if (!payload.location) {
-            showModalAlert($addAssetAlert, "Silakan pilih lokasi aset.");
-            return;
-        }
-        if (!payload.condition) {
-            showModalAlert($addAssetAlert, "Silakan pilih kondisi aset.");
-            return;
-        }
-        if (isNaN(payload.qty_in) || payload.qty_in < 0) {
-            showModalAlert($addAssetAlert, "Jumlah (Qty) harus berupa angka minimal 0.");
+            showModalAlert(
+                $addAssetAlert,
+                "Kode aset wajib diisi."
+            );
             return;
         }
 
-        // Disable submit button
-        $saveAssetButton.prop("disabled", true).html(`
-            <span class="spinner-border spinner-border-sm me-2"></span>
-            Menyimpan...
-        `);
+        if (!payload.nama_asset) {
+            showModalAlert(
+                $addAssetAlert,
+                "Nama aset wajib diisi."
+            );
+            return;
+        }
+
+        if (!payload.category || isNaN(payload.category)) {
+            showModalAlert(
+                $addAssetAlert,
+                "Silakan pilih kategori aset."
+            );
+            return;
+        }
+
+        if (!payload.location) {
+            showModalAlert(
+                $addAssetAlert,
+                "Silakan pilih lokasi aset."
+            );
+            return;
+        }
+
+        if (!payload.condition) {
+            showModalAlert(
+                $addAssetAlert,
+                "Silakan pilih kondisi aset."
+            );
+            return;
+        }
+
+        if (isNaN(payload.qty_in) || payload.qty_in < 0) {
+            showModalAlert(
+                $addAssetAlert,
+                "Jumlah (Qty) harus berupa angka minimal 0."
+            );
+            return;
+        }
+
+        $saveAssetButton
+            .prop("disabled", true)
+            .html(`
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Menyimpan...
+            `);
 
         $.ajax({
             url: ASSET_URL,
@@ -467,70 +735,124 @@ $(document).ready(function () {
             contentType: "application/json",
             dataType: "json",
             data: JSON.stringify(payload),
-            xhrFields: { withCredentials: true },
-            headers: { Accept: "application/json" },
+
+            xhrFields: {
+                withCredentials: true
+            },
+
+            headers: {
+                Accept: "application/json"
+            },
+
             success: function (response) {
                 if (addModalEl) {
-                    bootstrap.Modal.getOrCreateInstance(addModalEl).hide();
+                    bootstrap.Modal
+                        .getOrCreateInstance(addModalEl)
+                        .hide();
                 }
+
                 $addAssetForm[0].reset();
+
                 loadAssets();
 
                 Swal.fire({
                     icon: "success",
                     title: "Berhasil!",
-                    text: response.message || "Aset baru berhasil ditambahkan.",
+                    text:
+                        response.message ||
+                        "Aset baru berhasil ditambahkan.",
                     timer: 2000,
                     showConfirmButton: false
                 });
             },
-            error: function (xhr, status, error) {
-                console.error("Gagal menambahkan aset:", xhr.status, xhr.responseText);
+
+            error: function (xhr) {
+                console.error(
+                    "Gagal menambahkan aset:",
+                    xhr.status,
+                    xhr.responseText
+                );
+
                 const resp = xhr.responseJSON || {};
-                let message = resp.message || resp.error || "Aset gagal ditambahkan.";
+
+                let message =
+                    resp.message ||
+                    resp.error ||
+                    "Aset gagal ditambahkan.";
 
                 if (xhr.status === 409) {
-                    message = "Kode aset sudah digunakan. Harap gunakan kode lain.";
+                    message =
+                        "Kode aset sudah digunakan. Harap gunakan kode lain.";
                 } else if (xhr.status === 400) {
-                    message = resp.error || "Data input aset tidak valid.";
+                    message =
+                        resp.error ||
+                        "Data input aset tidak valid.";
                 }
 
-                showModalAlert($addAssetAlert, message, "danger");
+                showModalAlert(
+                    $addAssetAlert,
+                    message,
+                    "danger"
+                );
             },
+
             complete: function () {
-                $saveAssetButton.prop("disabled", false).html(`
-                    <i class="bi bi-save me-1"></i> Simpan Aset
-                `);
+                $saveAssetButton
+                    .prop("disabled", false)
+                    .html(`
+                        <i class="bi bi-save me-1"></i>
+                        Simpan Aset
+                    `);
             }
         });
     });
 
     // ==========================================
-    // DETAIL ASSET (LIHAT DETAIL)
+    // DETAIL ASSET
     // ==========================================
 
     $(document).on("click", ".btn-detail-asset", function () {
         const id = $(this).attr("data-id");
+
         if (!id) return;
 
-        // Cari di cache lokal dulu atau ambil dari API
-        const item = assets.find(a => String(a.asset_id) === String(id));
+        const item = assets.find(
+            a => String(a.asset_id) === String(id)
+        );
+
         if (item) {
             displayDetail(item);
         } else {
-            // Ambil dari server
             $.ajax({
-                url: `${ASSET_URL}/${id}`,
+                url: `${ASSET_URL}/${encodeURIComponent(id)}`,
                 method: "GET",
                 dataType: "json",
-                xhrFields: { withCredentials: true },
-                headers: { Accept: "application/json" },
+
+                xhrFields: {
+                    withCredentials: true
+                },
+
+                headers: {
+                    Accept: "application/json"
+                },
+
                 success: function (response) {
                     const data = response.data || response;
                     displayDetail(data);
                 },
+
                 error: function (xhr) {
-                    Swal.fire("Error", "Gagal memuat detail aset.", "error");
+                    console.error(
+                        "Gagal memuat detail aset:",
+                        xhr.status,
+                        xhr.responseText
+                    );
+
+                    Swal.fire(
+                        "Error",
+                        "Gagal memuat detail aset.",
+                        "error"
+                    );
                 }
             });
         }
@@ -539,49 +861,83 @@ $(document).ready(function () {
     function displayDetail(item) {
         $("#detailAssetCode").text(item.code_asset || "-");
         $("#detailAssetName").text(item.nama_asset || "-");
-        $("#detailAssetCategory").text(item.category_detail?.name || "-");
-        $("#detailAssetLocation").text(item.location_detail?.location_name || "-");
-        $("#detailAssetCondition").html(renderConditionBadge(item.condition));
-        $("#detailAssetStatus").html(renderStatusBadge(item.status));
-        $("#detailAssetQty").text(item.qty_in ?? 0);
-        $("#detailAssetDescription").text(item.description || "(Tidak ada deskripsi)");
-        $("#detailAssetUpdatedAt").text(formatDate(item.update_at));
 
-        $("#btnDetailToEdit").attr("data-id", item.asset_id);
+        $("#detailAssetCategory").text(
+            item.category_detail?.name || "-"
+        );
+
+        $("#detailAssetLocation").text(
+            item.location_detail?.location_name || "-"
+        );
+
+        $("#detailAssetCondition").html(
+            renderConditionBadge(item.condition)
+        );
+
+        $("#detailAssetStatus").html(
+            renderStatusBadge(item.status)
+        );
+
+        $("#detailAssetQty").text(item.qty_in ?? 0);
+
+        $("#detailAssetDescription").text(
+            item.description || "(Tidak ada deskripsi)"
+        );
+
+        $("#detailAssetUpdatedAt").text(
+            formatDate(item.update_at)
+        );
+
+        $("#btnDetailToEdit").attr(
+            "data-id",
+            item.asset_id
+        );
 
         if (detailModalEl) {
-            bootstrap.Modal.getOrCreateInstance(detailModalEl).show();
+            bootstrap.Modal
+                .getOrCreateInstance(detailModalEl)
+                .show();
         }
     }
 
     $("#btnDetailToEdit").on("click", function () {
         const id = $(this).attr("data-id");
+
         if (detailModalEl) {
-            bootstrap.Modal.getOrCreateInstance(detailModalEl).hide();
+            bootstrap.Modal
+                .getOrCreateInstance(detailModalEl)
+                .hide();
         }
+
         if (id) {
             openEditModal(id);
         }
     });
 
     // ==========================================
-    // UPDATE ASSET (UBAH / EDIT ASET)
+    // UPDATE ASSET (EDIT ASET)
     // ==========================================
 
     $(document).on("click", ".btn-edit-asset", function () {
         const id = $(this).attr("data-id");
+
         if (!id) {
-            Swal.fire("Error", "ID aset tidak ditemukan.", "error");
+            Swal.fire(
+                "Error",
+                "ID aset tidak ditemukan.",
+                "error"
+            );
             return;
         }
+
         openEditModal(id);
     });
 
     function openEditModal(id) {
         hideModalAlert($editAssetAlert);
+
         $editAssetForm[0].reset();
 
-        // Tampilkan indikator loading dengan SweetAlert
         Swal.fire({
             title: "Memuat Data...",
             text: "Mengambil data aset dari server",
@@ -589,49 +945,91 @@ $(document).ready(function () {
             didOpen: () => Swal.showLoading()
         });
 
-        // Ambil data aset dari endpoint GET /assets/:id
         $.ajax({
             url: `${ASSET_URL}/${encodeURIComponent(id)}`,
             method: "GET",
             dataType: "json",
-            xhrFields: { withCredentials: true },
-            headers: { Accept: "application/json" },
+
+            xhrFields: {
+                withCredentials: true
+            },
+
+            headers: {
+                Accept: "application/json"
+            },
+
             success: function (response) {
                 Swal.close();
+
                 const item = response.data || response;
+
                 if (!item || !item.asset_id) {
-                    Swal.fire("Error", "Data aset tidak ditemukan.", "error");
+                    Swal.fire(
+                        "Error",
+                        "Data aset tidak ditemukan.",
+                        "error"
+                    );
                     return;
                 }
 
-                // Isi form input
+                // Isi form
                 $("#editAssetId").val(item.asset_id);
                 $("#editAssetCode").val(item.code_asset || "");
                 $("#editAssetName").val(item.nama_asset || "");
-                $("#editAssetCondition").val(item.condition || "Baik");
-                $("#editAssetStatus").val(item.status ? "true" : "false");
-                $("#editAssetQty").val(item.qty_in ?? 0);
-                $("#editAssetDescription").val(item.description || "");
 
-                // Pastikan opsi kategori & lokasi dimuat dan diset terpilih
-                const catVal = item.category || item.category_detail?.id;
-                const locVal = item.location || item.location_detail?.location_id;
+                $("#editAssetCondition").val(
+                    item.condition || "Baik"
+                );
+
+                $("#editAssetStatus").val(
+                    item.status ? "true" : "false"
+                );
+
+                $("#editAssetQty").val(item.qty_in ?? 0);
+
+                $("#editAssetDescription").val(
+                    item.description || ""
+                );
+
+                const catVal =
+                    item.category ||
+                    item.category_detail?.id;
+
+                const locVal =
+                    item.location ||
+                    item.location_detail?.location_id;
 
                 Promise.all([
-                    loadCategoryOptions("#editAssetCategory", catVal),
-                    loadLocationOptions("#editAssetLocation", locVal)
+                    loadCategoryOptions(
+                        "#editAssetCategory",
+                        catVal
+                    ),
+                    loadLocationOptions(
+                        "#editAssetLocation",
+                        locVal
+                    )
                 ]).then(() => {
                     if (editModalEl) {
-                        bootstrap.Modal.getOrCreateInstance(editModalEl).show();
+                        bootstrap.Modal
+                            .getOrCreateInstance(editModalEl)
+                            .show();
                     }
                 });
             },
+
             error: function (xhr) {
-                console.error("GET detail aset gagal:", xhr.status, xhr.responseText);
+                console.error(
+                    "GET detail aset gagal:",
+                    xhr.status,
+                    xhr.responseText
+                );
+
                 Swal.fire({
                     icon: "error",
                     title: "Gagal Mengambil Data",
-                    text: xhr.responseJSON?.error || `Request gagal dengan status ${xhr.status}`
+                    text:
+                        xhr.responseJSON?.error ||
+                        `Request gagal dengan status ${xhr.status}`
                 });
             }
         });
@@ -639,11 +1037,16 @@ $(document).ready(function () {
 
     $editAssetForm.on("submit", function (event) {
         event.preventDefault();
+
         hideModalAlert($editAssetAlert);
 
         const id = $("#editAssetId").val();
+
         if (!id) {
-            showModalAlert($editAssetAlert, "ID aset hilang. Harap muat ulang halaman.");
+            showModalAlert(
+                $editAssetAlert,
+                "ID aset hilang. Harap muat ulang halaman."
+            );
             return;
         }
 
@@ -658,36 +1061,61 @@ $(document).ready(function () {
             description: $("#editAssetDescription").val().trim()
         };
 
-        // Validasi
+        // Validasi input
         if (!payload.code_asset) {
-            showModalAlert($editAssetAlert, "Kode aset wajib diisi.");
-            return;
-        }
-        if (!payload.nama_asset) {
-            showModalAlert($editAssetAlert, "Nama aset wajib diisi.");
-            return;
-        }
-        if (!payload.category || isNaN(payload.category)) {
-            showModalAlert($editAssetAlert, "Silakan pilih kategori aset.");
-            return;
-        }
-        if (!payload.location) {
-            showModalAlert($editAssetAlert, "Silakan pilih lokasi aset.");
-            return;
-        }
-        if (!payload.condition) {
-            showModalAlert($editAssetAlert, "Silakan pilih kondisi aset.");
-            return;
-        }
-        if (isNaN(payload.qty_in) || payload.qty_in < 0) {
-            showModalAlert($editAssetAlert, "Jumlah (Qty) harus berupa angka minimal 0.");
+            showModalAlert(
+                $editAssetAlert,
+                "Kode aset wajib diisi."
+            );
             return;
         }
 
-        $updateAssetButton.prop("disabled", true).html(`
-            <span class="spinner-border spinner-border-sm me-2"></span>
-            Menyimpan Perubahan...
-        `);
+        if (!payload.nama_asset) {
+            showModalAlert(
+                $editAssetAlert,
+                "Nama aset wajib diisi."
+            );
+            return;
+        }
+
+        if (!payload.category || isNaN(payload.category)) {
+            showModalAlert(
+                $editAssetAlert,
+                "Silakan pilih kategori aset."
+            );
+            return;
+        }
+
+        if (!payload.location) {
+            showModalAlert(
+                $editAssetAlert,
+                "Silakan pilih lokasi aset."
+            );
+            return;
+        }
+
+        if (!payload.condition) {
+            showModalAlert(
+                $editAssetAlert,
+                "Silakan pilih kondisi aset."
+            );
+            return;
+        }
+
+        if (isNaN(payload.qty_in) || payload.qty_in < 0) {
+            showModalAlert(
+                $editAssetAlert,
+                "Jumlah (Qty) harus berupa angka minimal 0."
+            );
+            return;
+        }
+
+        $updateAssetButton
+            .prop("disabled", true)
+            .html(`
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Menyimpan Perubahan...
+            `);
 
         $.ajax({
             url: `${ASSET_URL}/${encodeURIComponent(id)}`,
@@ -695,39 +1123,72 @@ $(document).ready(function () {
             contentType: "application/json",
             dataType: "json",
             data: JSON.stringify(payload),
-            xhrFields: { withCredentials: true },
-            headers: { Accept: "application/json" },
+
+            xhrFields: {
+                withCredentials: true
+            },
+
+            headers: {
+                Accept: "application/json"
+            },
+
             success: function (response) {
                 if (editModalEl) {
-                    bootstrap.Modal.getOrCreateInstance(editModalEl).hide();
+                    bootstrap.Modal
+                        .getOrCreateInstance(editModalEl)
+                        .hide();
                 }
+
                 loadAssets();
 
                 Swal.fire({
                     icon: "success",
                     title: "Berhasil!",
-                    text: response.message || "Data aset berhasil diperbarui.",
+                    text:
+                        response.message ||
+                        "Data aset berhasil diperbarui.",
                     timer: 2000,
                     showConfirmButton: false
                 });
             },
+
             error: function (xhr) {
-                console.error("Gagal memperbarui aset:", xhr.status, xhr.responseText);
+                console.error(
+                    "Gagal memperbarui aset:",
+                    xhr.status,
+                    xhr.responseText
+                );
+
                 const resp = xhr.responseJSON || {};
-                let message = resp.message || resp.error || "Gagal memperbarui data aset.";
+
+                let message =
+                    resp.message ||
+                    resp.error ||
+                    "Gagal memperbarui data aset.";
 
                 if (xhr.status === 409) {
-                    message = "Kode aset sudah digunakan oleh data lain.";
+                    message =
+                        "Kode aset sudah digunakan oleh data lain.";
                 } else if (xhr.status === 400) {
-                    message = resp.error || "Data yang dikirimkan tidak valid.";
+                    message =
+                        resp.error ||
+                        "Data yang dikirimkan tidak valid.";
                 }
 
-                showModalAlert($editAssetAlert, message, "danger");
+                showModalAlert(
+                    $editAssetAlert,
+                    message,
+                    "danger"
+                );
             },
+
             complete: function () {
-                $updateAssetButton.prop("disabled", false).html(`
-                    <i class="bi bi-save me-1"></i> Simpan Perubahan
-                `);
+                $updateAssetButton
+                    .prop("disabled", false)
+                    .html(`
+                        <i class="bi bi-save me-1"></i>
+                        Simpan Perubahan
+                    `);
             }
         });
     });
@@ -736,67 +1197,111 @@ $(document).ready(function () {
     // DELETE ASSET (HAPUS ASET)
     // ==========================================
 
-    $(document).on("click", ".btn-delete-asset", async function () {
-        const id = $(this).attr("data-id");
-        const name = $(this).attr("data-name") || "aset ini";
-        const code = $(this).attr("data-code") || "";
+    $(document).on(
+        "click",
+        ".btn-delete-asset",
+        async function () {
+            const id = $(this).attr("data-id");
+            const name =
+                $(this).attr("data-name") || "aset ini";
+            const code = $(this).attr("data-code") || "";
 
-        if (!id) {
-            Swal.fire("Error", "ID aset tidak ditemukan.", "error");
-            return;
+            if (!id) {
+                Swal.fire(
+                    "Error",
+                    "ID aset tidak ditemukan.",
+                    "error"
+                );
+                return;
+            }
+
+            const confirm = await Swal.fire({
+                title: "Hapus Aset?",
+                html: `
+                    Apakah Anda yakin ingin menghapus aset
+                    <strong>${escapeHtml(name)}</strong>
+                    ${
+                        code
+                            ? "(" + escapeHtml(code) + ")"
+                            : ""
+                    }?
+                `,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#dc3545",
+                cancelButtonColor: "#6c757d",
+                confirmButtonText:
+                    "<i class='bi bi-trash me-1'></i> Ya, Hapus!",
+                cancelButtonText: "Batal"
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            Swal.fire({
+                title: "Menghapus...",
+                text: "Mohon tunggu sebentar",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            $.ajax({
+                url: `${ASSET_URL}/${encodeURIComponent(id)}`,
+                method: "DELETE",
+                dataType: "json",
+
+                xhrFields: {
+                    withCredentials: true
+                },
+
+                headers: {
+                    Accept: "application/json"
+                },
+
+                success: function (response) {
+                    loadAssets();
+
+                    Swal.fire({
+                        icon: "success",
+                        title: "Terhapus!",
+                        text:
+                            response.message ||
+                            "Aset berhasil dihapus.",
+                        timer: 1800,
+                        showConfirmButton: false
+                    });
+                },
+
+                error: function (xhr) {
+                    console.error(
+                        "Gagal menghapus aset:",
+                        xhr.status,
+                        xhr.responseText
+                    );
+
+                    const resp = xhr.responseJSON || {};
+
+                    Swal.fire({
+                        icon: "error",
+                        title: "Gagal Menghapus",
+                        text:
+                            resp.message ||
+                            resp.error ||
+                            `Gagal menghapus aset (HTTP ${xhr.status}).`
+                    });
+                }
+            });
+        }
+    );
+
+    // ==========================================
+    // UTILITY: SANITASI HTML
+    // ==========================================
+
+    function escapeHtml(text) {
+        if (text === null || text === undefined || text === "") {
+            return "";
         }
 
-        const confirm = await Swal.fire({
-            title: "Hapus Aset?",
-            html: `Apakah Anda yakin ingin menghapus aset <strong>${escapeHtml(name)}</strong> ${code ? '(' + escapeHtml(code) + ')' : ''}?`,
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#dc3545",
-            cancelButtonColor: "#6c757d",
-            confirmButtonText: "<i class='bi bi-trash me-1'></i> Ya, Hapus!",
-            cancelButtonText: "Batal"
-        });
-
-        if (!confirm.isConfirmed) return;
-
-        Swal.fire({
-            title: "Menghapus...",
-            text: "Mohon tunggu sebentar",
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
-        });
-
-        $.ajax({
-            url: `${ASSET_URL}/${encodeURIComponent(id)}`,
-            method: "DELETE",
-            dataType: "json",
-            xhrFields: { withCredentials: true },
-            headers: { Accept: "application/json" },
-            success: function (response) {
-                loadAssets();
-                Swal.fire({
-                    icon: "success",
-                    title: "Terhapus!",
-                    text: response.message || "Aset berhasil dihapus.",
-                    timer: 1800,
-                    showConfirmButton: false
-                });
-            },
-            error: function (xhr) {
-                console.error("Gagal menghapus aset:", xhr.status, xhr.responseText);
-                const resp = xhr.responseJSON || {};
-                Swal.fire({
-                    icon: "error",
-                    title: "Gagal Menghapus",
-                    text: resp.message || resp.error || `Gagal menghapus aset (HTTP ${xhr.status}).`
-                });
-            }
-        });
-    });
-
-    // Utility: sanitize text for safety
-    function escapeHtml(text) {
-        if (!text) return "";
         return String(text)
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
@@ -805,6 +1310,9 @@ $(document).ready(function () {
             .replace(/'/g, "&#039;");
     }
 
-    // Panggilan pertama saat halaman dibuka
+    // ==========================================
+    // PANGGILAN PERTAMA
+    // ==========================================
+
     loadAssets();
 });

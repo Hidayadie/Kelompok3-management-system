@@ -2,8 +2,11 @@
  * AJAX & Modal CRUD Lokasi - Sistem Inventaris Cerdas
  */
 
-const API_BASE = "http://localhost:8080/api/private";
-const LOCATION_URL = `${API_BASE}/location`;
+//const API_BASE = "http://localhost:8080/api/private";
+
+const API_BASE = window.APP_CONFIG.API_BASE_URL; //"http://localhost:8080",
+const FRONTEND_BASE_URL= window.APP_CONFIG.BASIC_URL; //"http://localhost:8088",
+const LOCATION_URL = `${API_BASE}/api/private/location`;
 
 $(document).ready(function () {
     // DOM References
@@ -134,107 +137,160 @@ $(document).ready(function () {
     // READ / LOAD TABLE LOKASI
     // ==========================================
 
-    function renderTable() {
-        const selectedId = $filter.length ? $filter.val() : "";
-        const statusVal = $statusFilter.length ? $statusFilter.val() : "";
+   function renderTable() {
+    const selectedId = $filter.length ? $filter.val() : "";
+    const statusVal = $statusFilter.length ? $statusFilter.val() : "";
 
-        let filtered = locations;
+    let filtered = locations;
 
-        // Filter berdasarkan pencarian ID / Select2
-        if (selectedId) {
-            filtered = filtered.filter(item => (item.location_id ?? item.id) === selectedId);
-        }
+    // Filter berdasarkan ID lokasi / Select2
+    if (selectedId) {
+        filtered = filtered.filter(item =>
+            String(item.location_id ?? item.id) === String(selectedId)
+        );
+    }
 
-        // Filter status aktif/tidak aktif
-        if (statusVal === "active") {
-            filtered = filtered.filter(item => item.is_active === true);
-        } else if (statusVal === "inactive") {
-            filtered = filtered.filter(item => item.is_active === false);
-        }
+    // Filter berdasarkan status aktif / tidak aktif
+    if (statusVal === "active") {
+        filtered = filtered.filter(item => item.is_active === true);
+    } else if (statusVal === "inactive") {
+        filtered = filtered.filter(item => item.is_active === false);
+    }
 
-        $tableBody.empty();
+    // Hancurkan instance DataTables sebelumnya jika ada
+    if ($.fn.DataTable.isDataTable("#locationTable")) {
+        $("#locationTable").DataTable().destroy();
+    }
 
-        if (filtered.length === 0) {
-            $tableBody.html(`
-                <tr>
-                    <td colspan="7" class="text-center text-muted py-4">
-                        <i class="bi bi-geo-alt fs-2 d-block mb-2 text-secondary"></i>
-                        Tidak ada data lokasi ditemukan.
-                    </td>
-                </tr>
-            `);
-            $count.text("Total lokasi: 0");
-            return;
-        }
+    // Kosongkan tabel sebelum dirender ulang
+    $tableBody.empty();
 
-        filtered.forEach(function (item, index) {
-            const id = item.location_id ?? item.id;
-            const name = item.location_name ?? item.name ?? "-";
-            const $row = $("<tr>");
+    // Render data lokasi
+    filtered.forEach(function (item, index) {
+        const id = item.location_id ?? item.id;
+        const name = item.location_name ?? item.name ?? "-";
+        const $row = $("<tr>");
 
-            // 1. No.
-            $("<td>").addClass("text-center").text(index + 1).appendTo($row);
+        // 1. Nomor
+        $("<td>")
+            .addClass("text-center")
+            .text(index + 1)
+            .appendTo($row);
 
-            // 2. Nama Lokasi
-            $("<td>").html(`
-                <span class="fw-bold text-dark">${escapeHtml(name)}</span>
-            `).appendTo($row);
+        // 2. Nama lokasi
+        $("<td>").html(`
+            <span class="fw-bold text-dark">
+                ${escapeHtml(name)}
+            </span>
+        `).appendTo($row);
 
-            // 3. Lokasi Induk (Parent)
-            $("<td>").html(getParentLocationName(item.parent_id)).appendTo($row);
+        // 3. Lokasi induk
+        $("<td>")
+            .html(getParentLocationName(item.parent_id))
+            .appendTo($row);
 
-            // 4. Deskripsi
-            $("<td>").addClass("text-secondary small").html(escapeHtml(item.description || "-")).appendTo($row);
+        // 4. Deskripsi
+        $("<td>")
+            .addClass("text-secondary small")
+            .html(escapeHtml(item.description || "-"))
+            .appendTo($row);
 
-            // 5. Status
-            $("<td>").html(renderStatusBadge(item.is_active)).appendTo($row);
+        // 5. Status
+        $("<td>")
+            .html(renderStatusBadge(item.is_active))
+            .appendTo($row);
 
-            // 6. Terakhir Diperbarui
-            $("<td>").addClass("small text-muted").text(formatDate(item.updated_at || item.created_at)).appendTo($row);
+        // 6. Terakhir diperbarui
+        $("<td>")
+            .addClass("small text-muted")
+            .text(formatDate(item.updated_at || item.created_at))
+            .appendTo($row);
 
-            // 7. Aksi
-            const $actionTd = $("<td>").addClass("text-center");
-            const $actionGroup = $("<div>").addClass("btn-group btn-group-sm").attr("role", "group");
+        // 7. Tombol aksi
+        const $actionTd = $("<td>").addClass("text-center");
+        const $actionGroup = $("<div>")
+            .addClass("btn-group btn-group-sm")
+            .attr("role", "group");
 
-            // Tombol Detail
-            $("<button>", {
-                type: "button",
-                class: "btn btn-outline-info btn-detail-location",
-                title: "Detail Lokasi"
-            })
+        // Tombol detail
+        $("<button>", {
+            type: "button",
+            class: "btn btn-outline-info btn-detail-location",
+            title: "Detail Lokasi"
+        })
             .attr("data-id", id)
             .html('<i class="bi bi-eye"></i>')
             .appendTo($actionGroup);
 
-            // Tombol Ubah
-            $("<button>", {
-                type: "button",
-                class: "btn btn-outline-warning btn-edit-location",
-                title: "Ubah Lokasi"
-            })
+        // Tombol ubah
+        $("<button>", {
+            type: "button",
+            class: "btn btn-outline-warning btn-edit-location",
+            title: "Ubah Lokasi"
+        })
             .attr("data-id", id)
             .html('<i class="bi bi-pencil-square"></i>')
             .appendTo($actionGroup);
 
-            // Tombol Hapus
-            $("<button>", {
-                type: "button",
-                class: "btn btn-outline-danger btn-delete-location",
-                title: "Hapus Lokasi"
-            })
+        // Tombol hapus
+        $("<button>", {
+            type: "button",
+            class: "btn btn-outline-danger btn-delete-location",
+            title: "Hapus Lokasi"
+        })
             .attr("data-id", id)
             .attr("data-name", name)
             .html('<i class="bi bi-trash"></i>')
             .appendTo($actionGroup);
 
-            $actionTd.append($actionGroup);
-            $row.append($actionTd);
+        $actionTd.append($actionGroup);
+        $row.append($actionTd);
 
-            $tableBody.append($row);
-        });
+        $tableBody.append($row);
+    });
 
-        $count.text(`Menampilkan ${filtered.length} dari ${locations.length} lokasi`);
-    }
+    // Perbarui jumlah data
+    $count.text(
+        `Menampilkan ${filtered.length} dari ${locations.length} lokasi`
+    );
+
+    // Inisialisasi DataTables
+    $("#locationTable").DataTable({
+        pageLength: 10,
+        lengthMenu: [
+            [10, 25, 50, 100],
+            [10, 25, 50, 100]
+        ],
+        searching: true,
+        ordering: true,
+        info: true,
+        paging: true,
+        autoWidth: false,
+        order: [],
+        columnDefs: [
+            {
+                targets: [0, 6],
+                orderable: false
+            }
+        ],
+        language: {
+            emptyTable: "Tidak ada data lokasi ditemukan.",
+            zeroRecords: "Tidak ada data yang cocok.",
+            search: "Cari:",
+            searchPlaceholder: "Cari lokasi...",
+            lengthMenu: "Tampilkan _MENU_ data",
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ lokasi",
+            infoEmpty: "Tidak ada data lokasi",
+            infoFiltered: "(difilter dari _MAX_ total lokasi)",
+            paginate: {
+                first: "Pertama",
+                last: "Terakhir",
+                next: "Berikutnya",
+                previous: "Sebelumnya"
+            }
+        }
+    });
+}
 
     function loadLocations() {
         $refresh.prop("disabled", true);

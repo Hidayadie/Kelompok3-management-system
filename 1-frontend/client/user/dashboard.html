@@ -293,76 +293,14 @@
 </head>
 
 <body>
+   <!-- Sidebar diambil dari components/sidebar.html -->
+<div id="sidebar-container"></div>  
 
-<!-- SIDEBAR: MENU SELALU VERTIKAL -->
-<aside class="sidebar">
-    <div class="brand">
-        <div class="brand-icon">
-            <i class="bi bi-box-seam"></i>
-        </div>
-        <div class="brand-text">
-            <div>Inventaris Cerdas</div>
-            <small class="text-white-50 fw-normal">User Panel</small>
-        </div>
-    </div>
-
-    <div class="menu-title">Menu Utama</div>
-
-    <nav>
-        <a href="dashboard-admin.html" class="nav-link active">
-            <i class="bi bi-grid-1x2-fill"></i>
-            <span class="nav-text">Dashboard</span>
-        </a>
-
-        <a href="aset.html" class="nav-link">
-            <i class="bi bi-box-seam"></i>
-            <span class="nav-text">Kelola Aset</span>
-        </a>
-
-        <a href="kategori.html" class="nav-link">
-            <i class="bi bi-tags"></i>
-            <span class="nav-text">Kategori Aset</span>
-        </a>
-
-        <a href="keluhan.html" class="nav-link">
-            <i class="bi bi-chat-left-text"></i>
-            <span class="nav-text">Keluhan</span>
-        </a>
-
-        <a href="peminjaman.html" class="nav-link">
-            <i class="bi bi-arrow-left-right"></i>
-            <span class="nav-text">Peminjaman Aset</span>
-        </a>
-    </nav>
-
-    <div class="menu-title">Administrasi</div>
-
-    <nav>
-        <a href="pengguna.html" class="nav-link">
-            <i class="bi bi-people"></i>
-            <span class="nav-text">Manajemen Pengguna</span>
-        </a>
-
-        <a href="laporan.html" class="nav-link">
-            <i class="bi bi-file-earmark-bar-graph"></i>
-            <span class="nav-text">Laporan</span>
-        </a>
-
-        <a href="pengaturan.html" class="nav-link">
-            <i class="bi bi-gear"></i>
-            <span class="nav-text">Pengaturan</span>
-        </a>
-
-       <a href="#" id="logoutButton" class="nav-link logout">
-    <i class="bi bi-box-arrow-left"></i>
-    <span class="nav-text">Logout Sini</span>
-</a>
-    </nav>
-</aside>
 
 <!-- DASHBOARD -->
 <main class="main-content">
 
+    
     <header class="topbar">
         <div>
             <h1 class="page-title">Dashboard User</h1>
@@ -380,8 +318,8 @@
                     <i class="bi bi-person-fill fs-5"></i>
                 </div>
                 <div class="profile-text">
-                    <div class="fw-bold small">Administrator</div>
-                    <div class="muted">Super Admin</div>
+                    <div class="fw-bold small">USERS</div>
+                    <div class="muted">USERS</div>
                 </div>
             </div>
         </div>
@@ -588,25 +526,25 @@
         <div class="col-12 col-lg-5">
             <div class="content-card">
                 <h2 class="section-title">Akses Cepat</h2>
-                
+
                 <a href="aset.html" class="quick-link">
                     <i class="bi bi-plus-square"></i>
                     <span>Tambah Aset Baru</span>
                     <i class="bi bi-chevron-right"></i>
                 </a>
-                
+
                 <a href="keluhan.html" class="quick-link">
                     <i class="bi bi-tools"></i>
                     <span>Kelola Keluhan</span>
                     <i class="bi bi-chevron-right"></i>
                 </a>
-                
+
                 <a href="peminjaman.html" class="quick-link">
                     <i class="bi bi-arrow-left-right"></i>
                     <span>Kelola Peminjaman</span>
                     <i class="bi bi-chevron-right"></i>
                 </a>
-                
+
                 <a href="pengguna.html" class="quick-link">
                     <i class="bi bi-people"></i>
                     <span>Manajemen Pengguna</span>
@@ -623,65 +561,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-
-document.getElementById("logoutButton").addEventListener("click", async function (event) {
-    event.preventDefault();
-
-    try {
-        const response = await fetch("http://localhost:8080/api/auth/logout", {
-            method: "POST",
-            credentials: "include"
-        });
-        
-        console.log("Status logout:", response.status);
-    } catch (error) {
-        console.error("Request logout:", error);
-    }
-    alert("logout berhasil")
-    // Paksa navigasi ke halaman login di root frontend.
-    window.location.replace("/login.html");
-});
-
-(async function checkLogin() {
-    const API_URL = "http://localhost:8080";
-    const LOGIN_URL = "http://localhost:8081/login.html";
-
-    try {
-        const response = await fetch(`${API_URL}/api/me`, {
-            method: "GET",
-            credentials: "include",
-            cache: "no-store"
-        });
-
-        // Belum login atau sesi tidak valid.
-        if (!response.ok) {
-            window.location.replace(LOGIN_URL);
-            return;
-        }
-
-        // Pastikan respons bisa dibaca.
-        const result = await response.json();
-        const user = result.data || result.user;
-
-        if (!user || !user.role) {
-            window.location.replace(LOGIN_URL);
-            return;
-        }
-
-        // Opsional: simpan data pengguna untuk digunakan halaman.
-        window.currentUser = user;
-
-    } catch (error) {
-        console.error("Gagal memeriksa autentikasi:", error);
-
-        // Jika server tidak bisa diverifikasi, jangan izinkan
-        // halaman tetap terbuka.
-        window.location.replace(LOGIN_URL);
-    }
-})();
-</script>
-
+ 
+<script src="../js/auth.js"></script>
+<script src="../js/layout.js"></script>
 </body>
 </html>

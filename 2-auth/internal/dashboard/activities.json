@@ -1,0 +1,20 @@
+[
+  {
+    "id": 2,
+    "activity_type": "asset_updated",
+    "description": "Memperbarui aset Almari Buku. Deskripsi: ",
+    "created_at": "2026-10-28T17:03:27.2140877+07:00"
+  },
+  {
+    "id": 1,
+    "activity_type": "asset_created",
+    "description": "Menambahkan aset Laptop Lenovo",
+    "created_at": "2026-10-28T10:04:23+07:00"
+  },
+  {
+    "id": 1,
+    "activity_type": "asset_updated",
+    "description": "Mengubah data Printer Epson",
+    "created_at": "2026-10-28T09:50:00+07:00"
+  }
+]

@@ -1,94 +1,320 @@
 
-document.addEventListener("DOMContentLoaded", async () => {
-    "use strict";
+"use strict";
 
-    const sidebar = document.getElementById("sidebar-container");
+(() => {
+    // ==========================================
+    // KONFIGURASI
+    // ==========================================
+    const API_BASE_URL = "http://localhost:8080";
+    const LOGIN_URL = "http://localhost:8081/login.html";
 
-    // Pastikan container sidebar tersedia
-    if (!sidebar) {
-        console.error(
-            'Elemen dengan ID "sidebar-container" tidak ditemukan.'
-        );
-        return;
+    // Sidebar berdasarkan role
+    const SIDEBAR_URLS = {
+        admin: "../components/sidebar.html",
+        user: "../components/sidebar-user.html",
+        teknisi: "../components/sidebar-teknisi.html"
+    };
+
+    // Dashboard berdasarkan role
+    const ROLE_DASHBOARDS = {
+        admin: "http://localhost:8081/client/admin/dashboard.html",
+        user: "http://localhost:8081/client/user/dashboard.html",
+        teknisi: "http://localhost:8081/client/teknisi/dashboard.html"
+    };
+
+    // ==========================================
+    // CEGAH INISIALISASI BERULANG
+    // ==========================================
+    if (window.layoutInitialized) return;
+
+    window.layoutInitialized = true;
+    window.isRedirecting = false;
+    window.currentUser = null;
+
+    // ==========================================
+    // REDIRECT KE LOGIN
+    // ==========================================
+    function redirectToLogin(
+        message = "Sesi login berakhir. Silakan login kembali."
+    ) {
+        if (window.isRedirecting) return;
+
+        window.isRedirecting = true;
+
+        if (typeof Swal !== "undefined") {
+            Swal.fire({
+                icon: "warning",
+                title: "Akses Tidak Valid",
+                text: message,
+                confirmButtonText: "Login Kembali",
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then(() => {
+                window.location.replace(LOGIN_URL);
+            });
+        } else {
+            alert(message);
+            window.location.replace(LOGIN_URL);
+        }
     }
 
-    // Load sidebar.html
-    try {
-        const response = await fetch("../components/sidebar.html", {
-            cache: "no-cache"
-        });
+    window.redirectToLogin = redirectToLogin;
 
-        if (!response.ok) {
-            throw new Error(
-                `HTTP ${response.status}: ${response.statusText}`
-            );
-        }
+    // ==========================================
+    // DETEKSI HALAMAN PUBLIK
+    // ==========================================
+    function isPublicPage() {
+        const path = window.location.pathname.toLowerCase();
 
-        const html = await response.text();
+        return (
+            path.endsWith("/login.html") ||
+            path.endsWith("/register.html")
+        );
+    }
 
-        if (!html.trim()) {
-            throw new Error("File sidebar.html kosong.");
-        }
+    // ==========================================
+    // DETEKSI ROLE HALAMAN
+    // ==========================================
+    function getRequiredRole() {
+        const path = window.location.pathname
+            .replace(/\/+$/, "")
+            .toLowerCase();
 
-        sidebar.innerHTML = html;
+        const match = path.match(
+            /\/(admin|teknisi|user)(?:\/|$)/
+        );
 
-        console.log("Sidebar berhasil dimuat!");
+        return match ? match[1] : null;
+    }
 
-        // Pasang event logout setelah sidebar selesai dimuat
-        const logoutButton = sidebar.querySelector("#logoutButton");
+    // ==========================================
+    // CEK AUTENTIKASI DAN ROLE
+    // ==========================================
+    async function checkAuth() {
+        if (isPublicPage()) return true;
 
-        if (logoutButton) {
-            logoutButton.addEventListener("click", async (event) => {
-                event.preventDefault();
-
-                // Hindari klik logout berulang kali
-                if (logoutButton.dataset.loading === "true") {
-                    return;
+        try {
+            const response = await fetch(
+                `${API_BASE_URL}/api/me`,
+                {
+                    method: "GET",
+                    credentials: "include",
+                    headers: {
+                        Accept: "application/json"
+                    },
+                    cache: "no-store"
                 }
+            );
 
-                logoutButton.dataset.loading = "true";
-                logoutButton.style.pointerEvents = "none";
+            if (response.status === 401) {
+                redirectToLogin(
+                    "Sesi login kedaluwarsa. Silakan login kembali."
+                );
+                return false;
+            }
 
-                try {
-                    const response = await fetch(
-                        "http://localhost:8080/api/auth/logout",
-                        {
-                            method: "POST",
-                            credentials: "include",
-                            headers: {
-                                "Accept": "application/json"
-                            }
-                        }
+            if (response.status === 403) {
+                redirectToLogin(
+                    "Kamu tidak memiliki izin untuk mengakses halaman ini."
+                );
+                return false;
+            }
+
+            if (!response.ok) {
+                console.error(
+                    "[AUTH] Error API /api/me:",
+                    response.status
+                );
+
+                Swal.fire({
+                    icon: "error",
+                    title: "Gagal Memeriksa Login",
+                    text: "Tidak dapat memverifikasi akun. Silakan coba lagi."
+                });
+
+                return false;
+            }
+
+            const result = await response.json();
+            const user = result.data || result.user;
+
+            if (!user || !user.role) {
+                redirectToLogin(
+                    "Data pengguna atau role tidak valid."
+                );
+                return false;
+            }
+
+            // Normalisasi role
+            const role = String(user.role)
+                .trim()
+                .toLowerCase();
+
+            // Validasi role yang diperbolehkan
+            if (
+                !Object.prototype.hasOwnProperty.call(
+                    ROLE_DASHBOARDS,
+                    role
+                )
+            ) {
+                console.error("[AUTH] Role tidak dikenal:", role);
+
+                redirectToLogin(
+                    "Role akun tidak dikenali. Hubungi administrator."
+                );
+
+                return false;
+            }
+
+            user.role = role;
+            window.currentUser = user;
+
+            console.log("[AUTH] Login valid. Role:", role);
+
+            // ==========================================
+            // PROTEKSI HALAMAN BERDASARKAN ROLE
+            // ==========================================
+            const requiredRole = getRequiredRole();
+
+            if (requiredRole && requiredRole !== role) {
+                console.warn(
+                    `[AUTH] Role ${role} tidak boleh mengakses halaman ${requiredRole}.`
+                );
+
+                window.location.replace(
+                    ROLE_DASHBOARDS[role]
+                );
+
+                return false;
+            }
+
+            // ==========================================
+            // REDIRECT DASHBOARD UMUM
+            // ==========================================
+            if (!requiredRole) {
+                const currentPath = window.location.pathname
+                    .replace(/\/+$/, "")
+                    .toLowerCase();
+
+                const isGenericDashboard =
+                    currentPath.endsWith("/dashboard.html") ||
+                    currentPath === "/" ||
+                    currentPath.endsWith("/index.html");
+
+                if (isGenericDashboard) {
+                    window.location.replace(
+                        ROLE_DASHBOARDS[role]
                     );
 
-                    if (!response.ok) {
-                        console.error(
-                            "Logout API mengembalikan status:",
-                            response.status
-                        );
-                    }
-                } catch (error) {
-                    console.error("Request logout gagal:", error);
-                } finally {
-                    // Tetap arahkan ke login meskipun request gagal.
-                    window.location.href =
-                        "http://localhost:8081/login.html";
+                    return false;
                 }
+            }
+
+            return true;
+
+        } catch (error) {
+            console.error(
+                "[AUTH] Gagal memeriksa autentikasi:",
+                error
+            );
+
+            Swal.fire({
+                icon: "error",
+                title: "Koneksi Bermasalah",
+                text: "Server tidak dapat dihubungi. Periksa koneksi dan coba lagi."
             });
 
-            console.log("Event logout berhasil dipasang.");
-        } else {
-            console.warn(
-                'Tombol dengan ID "logoutButton" tidak ditemukan di sidebar.'
-            );
+            return false;
+        }
+    }
+
+    // ==========================================
+    // PILIH SIDEBAR BERDASARKAN ROLE
+    // ==========================================
+    function getSidebarURL() {
+        const role = window.currentUser?.role;
+
+        if (!role) {
+            console.error("[LAYOUT] Role pengguna tidak tersedia.");
+            return null;
         }
 
-        // Tandai menu aktif berdasarkan URL halaman
+        return SIDEBAR_URLS[role] || null;
+    }
+
+    // ==========================================
+    // LOAD SIDEBAR
+    // ==========================================
+    async function loadSidebar() {
+        const sidebar = document.getElementById(
+            "sidebar-container"
+        );
+
+        if (!sidebar) {
+            console.warn(
+                "[LAYOUT] Sidebar container tidak ditemukan."
+            );
+            return;
+        }
+
+        const sidebarURL = getSidebarURL();
+
+        if (!sidebarURL) {
+            sidebar.innerHTML = `
+                <div class="alert alert-danger m-3">
+                    Role tidak valid. Sidebar tidak dapat dimuat.
+                </div>
+            `;
+            return;
+        }
+
+        console.log("[LAYOUT] Memuat sidebar:", sidebarURL);
+
+        try {
+            const response = await fetch(sidebarURL, {
+                cache: "no-cache"
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            sidebar.innerHTML = await response.text();
+
+            // Atur menu aktif
+            setActiveMenu(sidebar);
+
+            // Aktifkan tombol logout
+            setupLogout(sidebar);
+
+            console.log(
+                `[LAYOUT] Sidebar role ${window.currentUser.role} berhasil dimuat.`
+            );
+
+        } catch (error) {
+            console.error(
+                "[LAYOUT] Gagal memuat sidebar:",
+                error
+            );
+
+            sidebar.innerHTML = `
+                <div class="alert alert-danger m-3">
+                    Sidebar gagal dimuat.
+                    Periksa path file dan server frontend.
+                </div>
+            `;
+        }
+    }
+
+    // ==========================================
+    // MENU AKTIF
+    // ==========================================
+    function setActiveMenu(sidebar) {
         const currentPath = window.location.pathname
             .replace(/\/+$/, "")
             .toLowerCase();
 
-        sidebar.querySelectorAll("a[href]").forEach((link) => {
+        sidebar.querySelectorAll("a[href]").forEach(link => {
             const href = link.getAttribute("href");
 
             if (
@@ -100,10 +326,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             try {
-                const linkPath = new URL(
+                const url = new URL(
                     href,
                     window.location.href
-                ).pathname.replace(/\/+$/, "").toLowerCase();
+                );
+
+                if (url.origin !== window.location.origin) {
+                    return;
+                }
+
+                const linkPath = url.pathname
+                    .replace(/\/+$/, "")
+                    .toLowerCase();
 
                 if (linkPath === currentPath) {
                     link.classList.add("active");
@@ -112,20 +346,92 @@ document.addEventListener("DOMContentLoaded", async () => {
                     link.classList.remove("active");
                     link.removeAttribute("aria-current");
                 }
+
             } catch (error) {
-                console.warn("Link sidebar tidak valid:", href);
+                console.warn(
+                    "[LAYOUT] Link tidak valid:",
+                    href
+                );
             }
         });
-
-    } catch (error) {
-        console.error("Sidebar gagal dimuat:", error);
-
-        sidebar.innerHTML = `
-            <div class="alert alert-danger m-3" role="alert">
-                Sidebar gagal dimuat.
-                <br>
-                <small>Periksa path file dan koneksi server.</small>
-            </div>
-        `;
     }
-});
+
+    // ==========================================
+    // LOGOUT
+    // ==========================================
+    function setupLogout(sidebar) {
+        const button = sidebar.querySelector("#logoutButton");
+
+        if (!button) {
+            console.warn(
+                "[LAYOUT] Tombol logout tidak ditemukan."
+            );
+            return;
+        }
+
+        button.addEventListener("click", async event => {
+            event.preventDefault();
+
+            if (button.dataset.loading === "true") return;
+
+            button.dataset.loading = "true";
+            button.disabled = true;
+
+            try {
+                const response = await fetch(
+                    `${API_BASE_URL}/api/auth/logout`,
+                    {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                            Accept: "application/json"
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    console.error(
+                        "[LAYOUT] Logout API gagal:",
+                        response.status
+                    );
+                }
+
+            } catch (error) {
+                console.error(
+                    "[LAYOUT] Request logout gagal:",
+                    error
+                );
+
+            } finally {
+                window.isRedirecting = true;
+                window.location.replace(LOGIN_URL);
+            }
+        });
+    }
+
+    // ==========================================
+    // INISIALISASI LAYOUT
+    // ==========================================
+    document.addEventListener(
+        "DOMContentLoaded",
+        async () => {
+            console.log("[LAYOUT] Inisialisasi dimulai.");
+
+            // Halaman login dan register tidak membutuhkan sidebar
+            if (isPublicPage()) return;
+
+            // Verifikasi login dan role terlebih dahulu
+            const authenticated = await checkAuth();
+
+            if (
+                !authenticated ||
+                window.isRedirecting
+            ) {
+                return;
+            }
+
+            // Sidebar dipilih setelah role terverifikasi
+            await loadSidebar();
+        }
+    );
+})();

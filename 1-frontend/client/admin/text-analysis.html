@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Analisis Teks - Inventaris Cerdas</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f4f7fb;
+            color: #1e293b;
+            font-family: Arial, sans-serif;
+        }
+
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: 250px;
+            height: 100vh;
+            padding: 24px 15px;
+            background: #102a56;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 10px 28px;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+        }
+
+        .brand-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #2563eb;
+            font-size: 23px;
+        }
+
+        .menu-title {
+            padding: 14px 12px 10px;
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 5px;
+            width: 100%;
+        }
+
+        .sidebar .nav-link {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            width: 100%;
+            min-height: 45px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            color: #cbd5e1;
+            text-decoration: none;
+            white-space: nowrap;
+            font-size: 13px;
+        }
+
+        .sidebar .nav-link i {
+            width: 21px;
+            flex-shrink: 0;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: #2563eb;
+            color: white;
+        }
+
+        .sidebar .logout {
+            margin-top: 20px;
+            border-top: 1px solid #334969;
+            border-radius: 0;
+            padding-top: 20px;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            min-height: 100vh;
+            padding: 28px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .page-title {
+            margin-bottom: 7px;
+            font-size: 25px;
+            font-weight: bold;
+        }
+
+        .muted,
+        .muted-text {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .stat-card,
+        .content-card,
+        .analysis-card,
+        .chart-card {
+            height: 100%;
+            padding: 22px;
+            background: #ffffff;
+            border: 1px solid #e9eef5;
+            border-radius: 13px;
+            box-shadow: 0 3px 12px rgba(15, 23, 42, 0.03);
+        }
+
+        .section-title {
+            margin-bottom: 18px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .stat-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            font-size: 20px;
+        }
+
+        .keyword-badge {
+            display: inline-block;
+            margin: 0 5px 5px 0;
+            padding: 5px 9px;
+            border-radius: 20px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 12px;
+        }
+
+        .record-item {
+            margin-bottom: 10px;
+            padding: 12px;
+            border: 1px solid #e9eef5;
+            border-radius: 9px;
+            background: #ffffff;
+            overflow-wrap: anywhere;
+        }
+
+        .source-badge {
+            flex-shrink: 0;
+        }
+
+        .chart-card {
+            padding: 22px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+        }
+
+        footer {
+            padding: 24px 0 5px;
+            color: #64748b;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 72px;
+                padding: 20px 8px;
+            }
+
+            .brand {
+                justify-content: center;
+                padding: 0 0 25px;
+            }
+
+            .brand-text,
+            .menu-title,
+            .nav-text {
+                display: none;
+            }
+
+            .sidebar .nav-link {
+                justify-content: center;
+                padding: 12px 5px;
+            }
+
+            .main-content {
+                margin-left: 72px;
+                padding: 16px 12px;
+            }
+
+            .page-title {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .chart-container {
+                height: 250px;
+            }
+
+            .stat-card,
+            .content-card,
+            .analysis-card,
+            .chart-card {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="app-layout">
+
+    <!-- Sidebar dimuat melalui layout.js -->
+    <aside id="sidebar-container"></aside>
+
+    <!-- Konten utama -->
+    <div id="main-content">
+        <main class="main-content">
+
+            <header class="topbar">
+                <div>
+                    <h1 class="page-title">ANALISIS CERDAS</h1>
+                    <div class="muted">
+                        Analisis Teks Keluhan dan Kerusakan
+                    </div>
+                </div>
+            </header>
+
+            <!-- Pengaturan analisis -->
+            <section class="content-card mb-4">
+
+                <div class="d-flex flex-wrap justify-content-between gap-3">
+                    <div>
+                        <p class="text-secondary mb-0">
+                            Kelompokkan laporan berdasarkan kemiripan teks
+                            menggunakan TF-IDF dan K-Means.
+                        </p>
+                    </div>
+
+                    <div>
+                        <span class="badge text-bg-light border p-2">
+                            <i class="bi bi-cpu me-1"></i>
+                            Unsupervised Learning
+                        </span>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <form id="analysisForm">
+                    <div class="row g-3 align-items-end">
+
+                        <div class="col-12 col-md-5 col-lg-4">
+                            <label for="sourceFilter" class="form-label fw-semibold">
+                                Sumber laporan
+                            </label>
+
+                            <select id="sourceFilter" class="form-select">
+                                <option value="all">Semua laporan</option>
+                                <option value="complaints">Keluhan aset</option>
+                                <option value="damage">Kerusakan aset</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-3 col-lg-3">
+                            <label for="clusterCount" class="form-label fw-semibold">
+                                Jumlah kelompok
+                            </label>
+
+                            <select id="clusterCount" class="form-select">
+                                <option value="2">2 kelompok</option>
+                                <option value="3" selected>3 kelompok</option>
+                                <option value="4">4 kelompok</option>
+                                <option value="5">5 kelompok</option>
+                                <option value="6">6 kelompok</option>
+                                <option value="7">7 kelompok</option>
+                                <option value="8">8 kelompok</option>
+                                <option value="9">9 kelompok</option>
+                                <option value="10">10 kelompok</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-4 col-lg-3">
+                            <button
+                                type="button"
+                                id="analyzeButton"
+                                class="btn btn-primary w-100"
+                            >
+                                <i class="bi bi-stars me-2"></i>
+                                Analisis Sekarang
+                            </button>
+                        </div>
+
+                    </div>
+                </form>
+
+            </section>
+
+            <!-- Pesan status -->
+            <div
+                id="analysisMessage"
+                class="alert d-none"
+                role="status"
+                aria-live="polite"
+            ></div>
+
+            <!-- Statistik -->
+            <div class="row g-3 mb-4">
+
+                <div class="col-12 col-md-4">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="muted-text">
+                                    Total laporan dianalisis
+                                </div>
+                                <div id="totalReports" class="fs-3 fw-bold mt-2">-</div>
+                            </div>
+
+                            <div class="stat-icon bg-primary-subtle text-primary">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="muted-text">
+                                    Kelompok ditemukan
+                                </div>
+                                <div id="totalClusters" class="fs-3 fw-bold mt-2">-</div>
+                            </div>
+
+                            <div class="stat-icon bg-success-subtle text-success">
+                                <i class="bi bi-diagram-3"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="muted-text">
+                                    Unit rusak dalam hasil
+                                </div>
+                                <div id="totalDamagedUnits" class="fs-3 fw-bold mt-2">-</div>
+                            </div>
+
+                            <div class="stat-icon bg-danger-subtle text-danger">
+                                <i class="bi bi-tools"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Grafik hasil analisis -->
+            <section class="mb-4" aria-labelledby="chartSectionTitle">
+
+                <div class="mb-3">
+                    <h2 id="chartSectionTitle" class="section-title mb-1">
+                        Visualisasi Hasil Analisis
+                    </h2>
+
+                    <div class="muted-text">
+                        Grafik diperbarui berdasarkan hasil analisis terbaru.
+                    </div>
+                </div>
+
+                <div class="row g-3">
+
+                    <!-- Grafik jumlah laporan -->
+                    <div class="col-12 col-xl-6">
+                        <div class="chart-card">
+                            <h3 class="h6 fw-bold mb-1">
+                                Jumlah Laporan per Cluster
+                            </h3>
+
+                            <p class="muted-text small mb-3">
+                                Membandingkan jumlah laporan pada setiap kelompok.
+                            </p>
+
+                            <div class="chart-container">
+                                <canvas
+                                    id="reportsByClusterChart"
+                                    role="img"
+                                    aria-label="Grafik jumlah laporan per cluster"
+                                ></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grafik jumlah unit rusak -->
+                    <div
+                        class="col-12 col-xl-6"
+                        id="damagedUnitsChartContainer"
+                    >
+                        <div class="chart-card">
+                            <h3 class="h6 fw-bold mb-1">
+                                Jumlah Unit Rusak per Cluster
+                            </h3>
+
+                            <p class="muted-text small mb-3">
+                                Total unit rusak berdasarkan kelompok hasil analisis.
+                            </p>
+
+                            <div class="chart-container">
+                                <canvas
+                                    id="damagedUnitsByClusterChart"
+                                    role="img"
+                                    aria-label="Grafik jumlah unit rusak per cluster"
+                                ></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Hasil clustering -->
+            <section class="mb-4">
+
+                <div class="mb-3">
+                    <h2 class="section-title mb-1">
+                        Hasil Clustering
+                    </h2>
+
+                    <div class="muted-text">
+                        Laporan dikelompokkan berdasarkan kemiripan teks.
+                    </div>
+                </div>
+
+                <div id="clusterResults" class="row g-3">
+                    <div class="col-12">
+                        <div class="analysis-card text-center text-secondary">
+                            <i class="bi bi-bar-chart-line fs-1"></i>
+                            <p class="mb-0 mt-2">
+                                Klik Analisis Sekarang untuk memulai.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <p class="muted-text mt-4 mb-0">
+                Catatan: clustering menunjukkan kemiripan teks, bukan diagnosis
+                teknis atau kepastian bahwa dua laporan memiliki penyebab yang sama.
+            </p>
+
+            <footer>
+                &copy; 2026 Sistem Manajemen Inventaris Cerdas
+            </footer>
+
+        </main>
+    </div>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!--Routing-->
+<script src="../config.js"></script>
+
+
+<!-- Authentication -->
+<script src="../js/auth.js"></script>
+
+<!-- Layout/sidebar -->
+<script src="../js/layout.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+<!-- JavaScript analisis teks -->
+<script src="ajax/text-analysis.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kelola Kategori - Inventaris Cerdas</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f4f7fb;
+            color: #1e293b;
+            font-family: Arial, sans-serif;
+        }
+
+        /* SIDEBAR MENU VERTIKAL */
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: 250px;
+            height: 100vh;
+            padding: 24px 15px;
+            background: #102a56;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 10px 28px;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+        }
+
+        .brand-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #2563eb;
+            font-size: 23px;
+        }
+
+        .menu-title {
+            padding: 14px 12px 10px;
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 5px;
+            width: 100%;
+        }
+
+        .sidebar .nav-link {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            width: 100%;
+            min-height: 45px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            color: #cbd5e1;
+            text-decoration: none;
+            white-space: nowrap;
+            font-size: 13px;
+        }
+
+        .sidebar .nav-link i {
+            width: 21px;
+            flex-shrink: 0;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: #2563eb;
+            color: white;
+        }
+        
+        .sidebar .logout {
+            margin-top: 20px;
+            border-top: 1px solid #334969;
+            border-radius: 0;
+            padding-top: 20px;
+        }
+
+        /* KONTEN UTAMA */
+        .main-content {
+            margin-left: 250px;
+            min-height: 100vh;
+            padding: 28px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .page-title {
+            margin-bottom: 7px;
+            font-size: 25px;
+            font-weight: bold;
+        }
+        
+        .muted {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .stat-card, .content-card {
+            height: 100%;
+            padding: 22px;
+            background: white;
+            border: 1px solid #e9eef5;
+            border-radius: 13px;
+            box-shadow: 0 3px 12px rgba(15, 23, 42, .03);
+        }
+
+        .section-title {
+            margin-bottom: 18px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .table thead th {
+            padding: 14px;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .table tbody td {
+            padding: 15px 14px;
+            font-size: 12px;
+            vertical-align: middle;
+        }
+
+        footer {
+            padding: 24px 0 5px;
+            color: #64748b;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 72px;
+                padding: 20px 8px;
+            }
+            
+            .brand {
+                justify-content: center;
+                padding: 0 0 25px;
+            }
+
+            .brand-text, .menu-title, .nav-text {
+                display: none;
+            }
+            
+            .sidebar .nav-link {
+                justify-content: center;
+                padding: 12px 5px;
+            }
+
+            .main-content {
+                margin-left: 72px;
+                padding: 16px 12px;
+            }
+            
+            .page-title {
+                font-size: 20px;
+            }
+        }
+        
+
+        
+/* ===== FIX SCROLL SEMUA MODAL ===== */
+
+.modal .modal-dialog {
+    max-height: calc(100dvh - 2rem);
+}
+
+.modal .modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 2rem);
+    overflow: hidden;
+}
+
+/* Modal Tambah/Edit: form harus bisa menyusut */
+#assetBrokenModal .modal-content > form {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Area isi modal yang di-scroll */
+#assetBrokenModal .modal-body,
+#assetBrokenDetailModal .modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Header dan footer tidak ikut tergeser */
+.modal .modal-header,
+.modal .modal-footer {
+    flex-shrink: 0;
+}
+
+@media (max-width: 575.98px) {
+    .modal .modal-dialog {
+        margin: 0.5rem;
+    }
+
+    .modal .modal-content {
+        max-height: calc(100dvh - 1rem);
+    }
+}
+    
+    </style>
+</head>
+
+<body>
+    
+    <!-- Sidebar diambil dari components/sidebar.html -->
+    <div id="sidebar-container"></div>
+    
+      <main class="main-content">
+    <header class="topbar">
+      <div><h1 class="page-title">Aset Rusak</h1><div class="muted">Kelola pencatatan aset yang mengalami kerusakan</div></div>
+    </header>
+    
+    <section class="content-card">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div><h2 class="section-title mb-1">Daftar Aset Rusak</h2><div class="muted">Data kerusakan dan kuantitas aset</div></div>
+        <div class="d-flex gap-2">
+          <button id="refreshAssetBroken" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+          <button id="btnAddAssetBroken" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#assetBrokenModal"><i class="bi bi-plus-lg me-1"></i>Tambah Aset Rusak</button>
+        </div>
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-md-6"><label for="assetBrokenSearch" class="form-label fw-semibold">Cari data</label><input id="assetBrokenSearch" class="form-control" type="search" placeholder="Cari kode, nama aset, status..."></div>
+        <div class="col-md-3"><label for="assetBrokenStatusFilter" class="form-label fw-semibold">Filter status</label>
+          <select id="assetBrokenStatusFilter" class="form-select"><option value="">Semua status</option><option value="rusak_ringan">Rusak ringan</option><option value="rusak_sedang">Rusak sedang</option><option value="rusak_berat">Rusak berat</option></select>
+        </div>
+      </div>
+      <div id="assetBrokenAlert" class="alert d-none" role="alert"></div>
+      <div class="table-responsive">
+        <table id="assetBrokenTable" class="table table-hover align-middle mb-0">
+          <thead><tr><th>No.</th><th>Kode</th><th>Nama aset</th><th>Kode aset</th><th>Lokasi</th><th>Qty rusak</th><th>Status</th><th>Perlu diganti</th><th class="text-center">Aksi</th></tr></thead>
+          <tbody id="assetBrokenTableBody"><tr><td colspan="8" class="text-center py-4">Memuat data...</td></tr></tbody>
+        </table>
+      </div>
+      <div id="assetBrokenCount" class="text-muted small mt-2">Total data: 0</div>
+    </section>
+    <footer>&copy; 2026 Sistem Manajemen Inventaris Cerdas</footer>
+  </main>
+  
+ <!-- Modal Tambah/Edit -->
+<div class="modal fade" id="assetBrokenModal" tabindex="-1"
+     aria-labelledby="assetBrokenModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <form id="assetBrokenForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="assetBrokenModalTitle">
+                        Tambah Aset Rusak
+                    </h5>
+                    <button type="button" class="btn-close"
+                            data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div id="formAlert"></div>
+
+                    <input type="hidden" id="rusakID">
+
+                    <div class="mb-3">
+                        <label for="codeRusak" class="form-label">
+                            Kode Kerusakan
+                        </label>
+                        <input type="text" id="codeRusak" class="form-control"
+                               maxlength="30" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="locationID" class="form-label">
+                            Lokasi
+                        </label>
+                        <select id="locationID" class="form-select" required>
+                            <option value="">Memuat lokasi...</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="assetID" class="form-label">
+                            Aset
+                        </label>
+                        <select id="assetID" class="form-select" required disabled>
+                            <option value="">Pilih lokasi terlebih dahulu</option>
+                        </select>
+                        <div class="form-text">
+                            Pilih lokasi agar daftar aset sesuai dengan lokasi tersebut.
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="selectedAssetInfo" hidden>
+                        <div class="alert alert-light border mb-0">
+                            <strong>Informasi aset:</strong>
+                            <div id="selectedAssetText"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="qtyRusak" class="form-label">
+                            Jumlah Aset Rusak
+                        </label>
+                        <input type="number" id="qtyRusak" class="form-control"
+                               min="1" step="1" value="1" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="status" class="form-label">
+                            Tingkat Kerusakan
+                        </label>
+                        <select id="status" class="form-select" required>
+                            <option value="">Pilih tingkat kerusakan</option>
+                            <option value="rusak_ringan">Rusak Ringan</option>
+                            <option value="rusak_sedang">Rusak Sedang</option>
+                            <option value="rusak_berat">Rusak Berat</option>
+                        </select>
+                    </div>
+
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox"
+                               id="statusRusak">
+                        <label class="form-check-label" for="statusRusak">
+                            Tidak dapat diperbaiki / tidak ekonomis diperbaiki
+                        </label>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">
+                            Deskripsi Kerusakan
+                        </label>
+                        <textarea id="description" class="form-control"
+                                  rows="3"
+                                  placeholder="Jelaskan kondisi kerusakan aset"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="btnSave">
+                        <i class="bi bi-save"></i> Simpan
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div> 
+  <!-- Modal detail -->
+  <div class="modal fade" id="assetBrokenDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title fw-bold"><i class="bi bi-info-circle me-2 text-primary"></i>Detail Aset Rusak</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button></div>
+      <div class="modal-body"><div class="row g-3" id="assetBrokenDetailBody"></div></div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button></div>
+    </div></div>
+  </div>
+
+        <footer>
+            &copy; 2026 Sistem Manajemen Inventaris Cerdas
+        </footer>
+
+    </main>
+
+    <!-- Library eksternal -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
+    
+    <!-- JavaScript lokal -->
+    <!--- <script src="../js/auth.js"></script> -->
+    <script src="../config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="ajax/assetbroken.js?v=2.2"></script>
+</body>
+</html>

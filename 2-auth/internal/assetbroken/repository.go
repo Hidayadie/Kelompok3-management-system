@@ -52,6 +52,7 @@ func (r *Repository) Create(
 		db = tx
 	}
 	return db.WithContext(ctx).Create(item).Error
+
 }
 
 // List mengambil seluruh data aset rusak beserta detail aset, kategori, dan lokasi.
@@ -114,6 +115,8 @@ func (r *Repository) Update(
 			"qty_rusak":    input.QtyRusak,
 			"status":       input.Status,
 			"status_rusak": input.StatusRusak,
+			"is_repaired":  input.IsRepaired,
+			"description":  input.Description,
 		})
 
 	if result.Error != nil {

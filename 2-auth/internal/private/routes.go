@@ -11,6 +11,8 @@ import (
 	"gin-auth/internal/dashboard"
 	"gin-auth/internal/location"
 	"gin-auth/internal/middleware"
+	"gin-auth/internal/textanalysis"
+	"gin-auth/internal/user"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,6 +27,8 @@ func RegisterRoutes(
 	complaintHandler *complaint.Handler,
 	assetBrokenHandler *assetbroken.Handler,
 	assetLendingHandler *assetlending.Handler,
+	userHandler *user.Handler,
+	textAnalysisHandler *textanalysis.Handler,
 ) {
 	group := r.Group("/api/private")
 	group.Use(requireAuth)
@@ -36,8 +40,13 @@ func RegisterRoutes(
 	complaint.RegisterRoutes(group, complaintHandler)
 	assetbroken.RegisterRoutes(group, assetBrokenHandler)
 	assetlending.RegisterRoutes(group, assetLendingHandler)
+	user.RegisterRoutes(group, userHandler)
 
-	group.GET("/profile",
+	// Endpoint analisis teks keluhan dan kerusakan.
+	textanalysis.RegisterRoutes(group, textAnalysisHandler)
+
+	group.GET(
+		"/profile",
 		middleware.MockEndpoint("private.profile"),
 		func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{

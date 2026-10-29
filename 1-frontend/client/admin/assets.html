@@ -9,7 +9,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
-    
+    <!-- DataTables Bootstrap 5 CSS -->
+    <link href="https://cdn.datatables.net/2.1.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
@@ -372,7 +373,7 @@
 
                     <!-- Tabel aset -->
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
+                        <table id="assetTable" class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th style="width: 50px;">No.</th>
@@ -780,8 +781,63 @@
     <script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
    
     <!-- JavaScript lokal, di bagian bawah body -->
+    <!-- <script src="../js/auth.js"></script> -->
+    <script src="../config.js"></script>
+     <script src="../js/auth.js"></script>
     <script src="../js/layout.js"></script>
     <script src="ajax/asset.js?v=2.2"></script>
+    <script>
+let assetDataTable = null;
+
+function initAssetDataTable() {
+    if (assetDataTable) {
+        assetDataTable.destroy();
+        assetDataTable = null;
+    }
+
+    assetDataTable = $('#assetTable').DataTable({
+        pageLength: 10,
+        lengthMenu: [
+            [10, 25, 50, 100, -1],
+            [10, 25, 50, 100, 'Semua']
+        ],
+        searching: true,
+        ordering: true,
+        paging: true,
+        info: true,
+        autoWidth: false,
+        scrollX: true,
+
+        columnDefs: [
+            {
+                targets: [0, 9],
+                orderable: false,
+                searchable: false
+            }
+        ],
+
+        language: {
+            search: 'Cari:',
+            searchPlaceholder: 'Cari data aset...',
+            lengthMenu: 'Tampilkan _MENU_ data',
+            info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',
+            infoEmpty: 'Tidak ada data',
+            infoFiltered: '(difilter dari _MAX_ total data)',
+            zeroRecords: 'Data tidak ditemukan',
+            emptyTable: 'Belum ada data aset',
+            loadingRecords: 'Memuat data...',
+            processing: 'Memproses...',
+            paginate: {
+                first: 'Pertama',
+                last: 'Terakhir',
+                next: 'Berikutnya',
+                previous: 'Sebelumnya'
+            }
+        }
+    });
+}
+
+    </script>
 
 </body>
 </html>

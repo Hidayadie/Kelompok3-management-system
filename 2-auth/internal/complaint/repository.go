@@ -22,8 +22,18 @@ func (r *Repository) Create(c *Complaint) error {
 func (r *Repository) FindAll() ([]Complaint, error) {
 	var complaints []Complaint
 
-	err := r.db.Order("created_at DESC").Find(&complaints).Error
-	return complaints, err
+	err := r.db.
+		Preload("User").
+		Preload("Asset").
+		Preload("Asset.Location").
+		Order("created_at DESC").
+		Find(&complaints).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return complaints, nil
 }
 
 func (r *Repository) FindByID(id uuid.UUID) (*Complaint, error) {
@@ -54,4 +64,54 @@ func (r *Repository) CountByYear(year int) (int64, error) {
 		Count(&count).Error
 
 	return count, err
+}
+
+func (r *Repository) FindByUserID(userID uint) ([]Complaint, error) {
+	var complaints []Complaint
+
+	err := r.db.
+		Preload("User").
+		Preload("Asset").
+		Preload("Asset.Location").
+		Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Find(&complaints).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return complaints, nil
+}
+
+func (r *Repository) GenerateUniqueCode(year int) (string, error) {
+	var lastCode string
+
+	prefix := fmt.Sprintf("CMP-%d-", year)
+
+	err := r.db.
+		Model(&Complaint{}).
+		Where("code LIKE ?", prefix+"%").
+		Order("code DESC").
+		Limit(1).
+		Pluck("code", &lastCode).Error
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return "", err
+	}
+
+	nextNumber := 1
+
+	if lastCode != "" {
+		var lastNumber int
+
+		_, err := fmt.Sscanf(lastCode, "CMP-%d-%d", new(int), &lastNumber)
+		if err != nil {
+			return "", fmt.Errorf("gagal membaca kode complaint terakhir %q: %w", lastCode, err)
+		}
+
+		nextNumber = lastNumber + 1
+	}
+
+	return fmt.Sprintf("CMP-%d-%03d", year, nextNumber), nil
 }
