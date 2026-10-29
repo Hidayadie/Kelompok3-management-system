@@ -9,7 +9,7 @@ $(function () {
     const FRONTEND_BASE_URL= window.APP_CONFIG.BASIC_URL; //"http://localhost:8088",
     
     const LENDING_URL = `${API_BASE}/api/private/asset-lending`;
-    const USERS_URL = `${API_BASE}/api/private/users `;
+    const USERS_URL = `${API_BASE}/api/private/users`;
     const ASSETS_URL = `${API_BASE}/api/private/assets`;
 
     const $table = $("#lendingTableBody");
