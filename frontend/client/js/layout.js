@@ -5,21 +5,22 @@
     // ==========================================
     // KONFIGURASI
     // ==========================================
-    const API_BASE_URL = "http://localhost:8080";
-    const LOGIN_URL = "http://localhost:8081/login.html";
+    const isLocalDev = window.location.hostname === "localhost" && window.location.port === "8081";
+    const API_BASE_URL = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || (isLocalDev ? "http://localhost:8080" : window.location.origin);
+    const LOGIN_URL = "/login.html";
 
     // Sidebar berdasarkan role
     const SIDEBAR_URLS = {
-        admin: "../components/sidebar.html",
-        user: "../components/sidebar-user.html",
-        teknisi: "../components/sidebar-teknisi.html"
+        admin: "/client/components/sidebar.html",
+        user: "/client/components/sidebar-user.html",
+        teknisi: "/client/components/sidebar-teknisi.html"
     };
 
     // Dashboard berdasarkan role
     const ROLE_DASHBOARDS = {
-        admin: "http://localhost:8081/client/admin/dashboard.html",
-        user: "http://localhost:8081/client/user/dashboard.html",
-        teknisi: "http://localhost:8081/client/teknisi/dashboard.html"
+        admin: "/client/admin/dashboard.html",
+        user: "/client/user/dashboard.html",
+        teknisi: "/client/teknisi/dashboard.html"
     };
 
     // ==========================================

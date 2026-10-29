@@ -1216,7 +1216,8 @@
 
     <!-- Client-Side Smart Routing & Ping Script -->
     <script>
-        const API_URL = "http://localhost:8080";
+        const isLocalDev = window.location.hostname === "localhost" && window.location.port === "8081";
+        const API_URL = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || (isLocalDev ? "http://localhost:8080" : window.location.origin);
         const ROLE_REDIRECTS = {
             admin: "client/admin/dashboard.html",
             user: "client/user/dashboard.html",
@@ -1237,7 +1238,7 @@
                 if (response.ok) {
                     badge.classList.remove("is-offline");
                     badge.classList.add("is-online");
-                    text.textContent = "Backend Terhubung (:8080)";
+                    text.textContent = "Backend Terhubung";
                 } else {
                     throw new Error("Respon tidak normal");
                 }

@@ -212,7 +212,8 @@
 <script>
     "use strict";
 
-    const API_BASE = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "http://localhost:8080";
+    const isLocalDev = window.location.hostname === "localhost" && window.location.port === "8081";
+    const API_BASE = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || (isLocalDev ? "http://localhost:8080" : window.location.origin);
     const REGISTER_URL = `${API_BASE}/api/auth/register`;
 
     // Tampilkan/sembunyikan password

@@ -93,7 +93,7 @@ func currentUser(c *gin.Context) (User, bool) {
 func serveDashboard(c *gin.Context, role string) {
 	frontendURL := os.Getenv("FRONTEND_URL")
 	if frontendURL == "" {
-		frontendURL = "http://localhost:8081"
+		frontendURL = ""
 	}
 
 	switch role {

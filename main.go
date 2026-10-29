@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -36,8 +37,13 @@ func setupEngine(db *gorm.DB, secret []byte) *gin.Engine {
 	// Sajikan gambar hasil upload.
 	r.Static("/uploads", "uploads")
 
+	allowedOrigins := []string{"http://localhost:8081"}
+	if customOrigin := os.Getenv("ALLOWED_ORIGIN"); customOrigin != "" {
+		allowedOrigins = append(allowedOrigins, customOrigin)
+	}
+
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:8081"},
+		AllowOrigins:     allowedOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -175,6 +181,29 @@ func setupEngine(db *gorm.DB, secret []byte) *gin.Engine {
 		userHandler,
 		textAnalysisHandler,
 	)
+
+	// =========================
+	// STATIC FRONTEND FILES
+	// =========================
+	r.Static("/client", "./frontend/client")
+	r.StaticFile("/", "./frontend/index.html")
+	r.StaticFile("/index.html", "./frontend/index.html")
+	r.StaticFile("/login", "./frontend/login.html")
+	r.StaticFile("/login.html", "./frontend/login.html")
+	r.StaticFile("/register", "./frontend/register.html")
+	r.StaticFile("/register.html", "./frontend/register.html")
+	r.StaticFile("/contoh.html", "./frontend/contoh.html")
+
+	// Fallback untuk file statis di folder frontend atau pesan 404
+	r.NoRoute(func(c *gin.Context) {
+		path := filepath.Clean(c.Request.URL.Path)
+		target := filepath.Join("frontend", path)
+		if fi, err := os.Stat(target); err == nil && !fi.IsDir() {
+			c.File(target)
+			return
+		}
+		c.JSON(http.StatusNotFound, gin.H{"error": "Halaman tidak ditemukan"})
+	})
 
 	return r
 }

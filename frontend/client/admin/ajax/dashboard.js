@@ -1,8 +1,11 @@
 
 "use strict";
 
+const isLocalDev = window.location.hostname === "localhost" && window.location.port === "8081";
+const API_BASE = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || (isLocalDev ? "http://localhost:8080" : window.location.origin);
+
 const DASHBOARD_API =
-    "http://localhost:8080/api/private/dashboard/summary";
+    `${API_BASE}/api/private/dashboard/summary`;
 
 /**
  * Mengisi teks berdasarkan ID elemen HTML.
@@ -268,7 +271,7 @@ function renderRecentAssets(assets) {
 }
 
 const LAST_ASSET_API =
-    "http://localhost:8080/api/private/dashboard/lastAsset";
+    `${API_BASE}/api/private/dashboard/lastAsset`;
 
 /**
  * Memuat data inventaris terbaru dari API.
@@ -446,7 +449,7 @@ function renderLastAssets(assets, tbody) {
 //load recent activities
 
 const ACTIVITIES_API =
-    "http://localhost:8080/api/private/dashboard/activities";
+    `${API_BASE}/api/private/dashboard/activities`;
 
 // Konfigurasi ikon dan warna berdasarkan jenis aktivitas.
 function getActivityStyle(type) {

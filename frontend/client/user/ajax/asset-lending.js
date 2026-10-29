@@ -5,7 +5,8 @@ $(document).ready(function () {
 
     // Jika aplikasi Anda sudah memiliki API_BASE dari env,
     // gunakan nilai konfigurasi tersebut.
-    const API_BASE = window.API_BASE || "http://localhost:8080";
+    const isLocalDev = window.location.hostname === "localhost" && window.location.port === "8081";
+    const API_BASE = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || window.API_BASE || (isLocalDev ? "http://localhost:8080" : window.location.origin);
 
     const API_LENDING = API_BASE + "/api/private/asset-lending";
 

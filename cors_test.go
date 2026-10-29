@@ -47,3 +47,34 @@ func TestCookieLogoutWithoutOrigin(t *testing.T) {
 		t.Fatal("Logout harus menghapus cookie")
 	}
 }
+
+func TestStaticFrontendServing(t *testing.T) {
+	router := setupEngine(nil, []byte("test-secret-at-least-32-bytes-long!"))
+
+	routesToTest := []string{
+		"/",
+		"/index.html",
+		"/login",
+		"/login.html",
+		"/register",
+		"/register.html",
+		"/client/admin/dashboard.html",
+	}
+
+	for _, path := range routesToTest {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if path == "/index.html" {
+			if w.Code != http.StatusOK && w.Code != http.StatusMovedPermanently {
+				t.Errorf("Path %s: got status %d, want 200 or 301", path, w.Code)
+			}
+			continue
+		}
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Path %s: got status %d, want %d", path, w.Code, http.StatusOK)
+		}
+	}
+}

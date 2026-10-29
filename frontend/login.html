@@ -610,7 +610,8 @@
 
     
 const $ = (id) => document.getElementById(id);
-const API_URL = "http://localhost:8080";
+const isLocalDev = window.location.hostname === "localhost" && window.location.port === "8081";
+const API_URL = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || (isLocalDev ? "http://localhost:8080" : window.location.origin);
 
 const ROLE_REDIRECTS = {
   admin: "/client/admin/dashboard.html",
@@ -731,7 +732,8 @@ $("googleLogin").addEventListener("click", () => {
 
 //cek sudah login belum
 (async function checkExistingLogin() {
-    const API_URL = "http://localhost:8080";
+    const isLocalDev = window.location.hostname === "localhost" && window.location.port === "8081";
+    const API_URL = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || (isLocalDev ? "http://localhost:8080" : window.location.origin);
 
     try {
         const response = await fetch(`${API_URL}/api/me`, {

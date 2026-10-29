@@ -631,7 +631,8 @@ document.getElementById("logoutButton").addEventListener("click", async function
     button.style.pointerEvents = "none";
 
     try {
-        const response = await fetch("http://localhost:8080/api/auth/logout", {
+        const logoutUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || (window.location.hostname === "localhost" && window.location.port === "8081" ? "http://localhost:8080/api/auth/logout" : `${window.location.origin}/api/auth/logout`);
+        const response = await fetch(logoutUrl, {
             method: "POST",
             credentials: "include"
         });
@@ -647,8 +648,9 @@ document.getElementById("logoutButton").addEventListener("click", async function
 });
 
 (async function checkLogin() {
-    const API_URL = "http://localhost:8080";
-    const LOGIN_URL = "http://localhost:8081/login.html";
+    const isLocalDev = window.location.hostname === "localhost" && window.location.port === "8081";
+    const API_URL = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || (isLocalDev ? "http://localhost:8080" : window.location.origin);
+    const LOGIN_URL = "/login.html";
 
     try {
         const response = await fetch(`${API_URL}/api/me`, {

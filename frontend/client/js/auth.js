@@ -5,8 +5,9 @@
     // ==========================================
     // KONFIGURASI
     // ==========================================
-    const API_BASE_URL = "http://localhost:8080";
-    const LOGIN_URL = "http://localhost:8081/login.html";
+    const isLocalDev = window.location.hostname === "localhost" && window.location.port === "8081";
+    const API_BASE_URL = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || (isLocalDev ? "http://localhost:8080" : window.location.origin);
+    const LOGIN_URL = "/login.html";
 
     // Hindari inisialisasi berulang
     if (window.authInitialized) {

@@ -2,7 +2,9 @@
  * AJAX & Modal CRUD Peminjaman Aset - Sistem Inventaris Cerdas
  */
 
-const API_BASE = "http://localhost:8080/api/private";
+const isLocalDev = window.location.hostname === "localhost" && window.location.port === "8081";
+const ROOT_API = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || (isLocalDev ? "http://localhost:8080" : window.location.origin);
+const API_BASE = `${ROOT_API}/api/private`;
 const LENDING_URL = `${API_BASE}/asset-lending`;
 const ASSET_URL = `${API_BASE}/assets`;
 
