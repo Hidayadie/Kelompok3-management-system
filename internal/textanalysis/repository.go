@@ -25,10 +25,11 @@ type complaintRow struct {
 }
 
 type damageRow struct {
-	AssetID     uint   `gorm:"column:rusak_id"`
-	Description string `gorm:"column:description"`
-	Quantity    int64  `gorm:"column:qty_rusak"`
-	Status      string `gorm:"column:status_rusak"`
+	AssetID     uint      `gorm:"column:rusak_id"`
+	Description string    `gorm:"column:description"`
+	Quantity    int64     `gorm:"column:qty_rusak"`
+	StatusRusak bool      `gorm:"column:status_rusak"`
+	CreatedAt   time.Time `gorm:"column:create_at"`
 }
 
 func (r *Repository) GetRecords(
@@ -71,7 +72,6 @@ func (r *Repository) GetRecords(
 	}
 
 	// Ambil data kerusakan aset.
-	// Ambil data kerusakan aset.
 	var damages []damageRow
 
 	err = r.db.WithContext(ctx).
@@ -94,7 +94,10 @@ func (r *Repository) GetRecords(
 	}
 
 	for _, item := range damages {
-		statusLabel := "Tidak rusak"
+		statusLabel := "Bisa diperbaiki"
+		if item.StatusRusak {
+			statusLabel = "Tidak bisa diperbaiki"
+		}
 
 		records = append(records, TextRecord{
 			ID:          fmt.Sprintf("%d", item.AssetID),
@@ -103,6 +106,7 @@ func (r *Repository) GetRecords(
 			Description: item.Description,
 			Quantity:    item.Quantity,
 			Status:      statusLabel,
+			CreatedAt:   item.CreatedAt,
 		})
 	}
 
