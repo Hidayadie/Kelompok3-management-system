@@ -42,7 +42,7 @@ func (h *Handler) Register(c *gin.Context) {
 		input.Role,
 	)
 
-	if errors.Is(err, gorm.ErrDuplicatedKey) {
+	if errors.Is(err, gorm.ErrDuplicatedKey) || errors.Is(err, ErrDuplicateEmail) {
 		c.JSON(http.StatusConflict, gin.H{
 			"error": "Email sudah terdaftar",
 		})
@@ -57,7 +57,8 @@ func (h *Handler) Register(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"data": user,
+		"message": "Registrasi berhasil",
+		"data":    user,
 	})
 }
 

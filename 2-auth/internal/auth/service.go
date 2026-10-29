@@ -38,6 +38,10 @@ func NewService(repo *Repository, secret []byte) *Service {
 }
 
 func (s *Service) Register(ctx context.Context, name, email, password, role string) (User, error) {
+	existingUser, err := s.repo.GetByEmail(ctx, strings.ToLower(email))
+	if err == nil && existingUser.ID != 0 {
+		return User{}, ErrDuplicateEmail
+	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return User{}, err

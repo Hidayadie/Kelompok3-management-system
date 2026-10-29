@@ -138,7 +138,7 @@
                         id="password" name="password"
                         placeholder="Minimal 8 karakter"
                         autocomplete="new-password"
-                        minlength="8" required>
+                        minlength="8" maxlength="72" required>
                         <button type="button" class="password-toggle"
                         data-target="password"
                         aria-label="Tampilkan password">
@@ -156,7 +156,8 @@
                     <input type="password" class="form-control"
                     id="confirmPassword"
                     placeholder="Ulangi password"
-                    autocomplete="new-password" required>
+                    autocomplete="new-password"
+                    minlength="8" maxlength="72" required>
                     <button type="button" class="password-toggle"
                     data-target="confirmPassword"
                     aria-label="Tampilkan konfirmasi password">
@@ -205,12 +206,14 @@
 </div>
 </div>
 
+<script src="client/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     "use strict";
 
-    const REGISTER_URL = "http://localhost:8080/api/auth/register";
+    const API_BASE = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "http://localhost:8080";
+    const REGISTER_URL = `${API_BASE}/api/auth/register`;
 
     // Tampilkan/sembunyikan password
     document.querySelectorAll(".password-toggle").forEach(button => {
@@ -255,6 +258,15 @@
                 Swal.fire(
                     "Validasi",
                     "Password minimal 8 karakter.",
+                    "warning"
+                );
+                return;
+            }
+
+            if (password.length > 72) {
+                Swal.fire(
+                    "Validasi",
+                    "Password maksimal 72 karakter.",
                     "warning"
                 );
                 return;
