@@ -1,6 +1,12 @@
-
 import json
+import os
 import sys
+import warnings
+
+# Redam warning loky/wmic di Windows dan warning scikit-learn non-fatal
+warnings.filterwarnings("ignore")
+if "LOKY_MAX_CPU_COUNT" not in os.environ:
+    os.environ["LOKY_MAX_CPU_COUNT"] = str(os.cpu_count() or 4)
 
 import numpy as np
 from sklearn.cluster import KMeans
